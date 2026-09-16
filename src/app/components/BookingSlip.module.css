@@ -1,0 +1,366 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.modal {
+  background: #FFFFFF;
+  width: 100%;
+  max-width: 780px;
+  border-radius: 1.25rem;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: auto;
+}
+
+.actionsBar {
+  padding: 1rem 1.75rem;
+  background: #F8FAFC;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.previewTag {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-bg);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.actionsRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btnPrint {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.15rem;
+  background: var(--primary);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.88rem;
+  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2);
+  transition: background 0.2s ease;
+}
+
+.btnPrint:hover {
+  background: var(--primary-hover);
+}
+
+.btnClose {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.35rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnClose:hover {
+  background: #E2E8F0;
+  color: var(--secondary);
+}
+
+.printableArea {
+  padding: 2.5rem;
+  background: #FFFFFF;
+  color: #0F172A;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.slipHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.headerLogo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logoBadge {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: #059669;
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.schoolName {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: 0.02em;
+}
+
+.schoolSub {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #059669;
+  letter-spacing: 0.08em;
+  margin-top: 0.15rem;
+}
+
+.schoolAddress {
+  font-size: 0.7rem;
+  color: #64748B;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.headerRight {
+  flex-shrink: 0;
+}
+
+.qrPlaceholder {
+  border: 1.5px dashed #CBD5E1;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: #F8FAFC;
+}
+
+.qrInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.qrCodeText {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #059669;
+}
+
+.slipDivider {
+  height: 2px;
+  background: #0F172A;
+  margin: 1.5rem 0 1.25rem;
+}
+
+.slipTitleRow {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.docTitle {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #0F172A;
+}
+
+.docNumber {
+  font-size: 0.8rem;
+  color: #64748B;
+  display: block;
+  margin-top: 0.25rem;
+  font-family: monospace;
+}
+
+.slipTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+  font-size: 0.85rem;
+}
+
+.thCol {
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  padding: 0.7rem 0.9rem;
+  font-weight: 600;
+  color: #475569;
+  width: 25%;
+}
+
+.tdCol {
+  border: 1px solid #CBD5E1;
+  padding: 0.7rem 0.9rem;
+  color: #0F172A;
+}
+
+.signatureSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+}
+
+.sigBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  font-size: 0.82rem;
+  width: 180px;
+}
+
+.sigBox small {
+  color: #64748B;
+  font-size: 0.75rem;
+}
+
+.sigSpace {
+  height: 65px;
+}
+
+.sigBoxCenter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.statusStamp {
+  transform: rotate(-5deg);
+}
+
+.stampApproved {
+  border: 2px solid #059669;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: #059669;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.stampApproved span {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.stampApproved strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.stampApproved small {
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.stampPending {
+  border: 2px dashed #D97706;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: #D97706;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.stampPending span {
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.stampPending strong {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.stampPending small {
+  font-size: 0.65rem;
+}
+
+.stampRejected {
+  border: 2px solid #E11D48;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: #E11D48;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.stampRejected span {
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.stampRejected strong {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.stampRejected small {
+  font-size: 0.65rem;
+}
+
+.slipFooterNotes {
+  border-top: 1px dashed #CBD5E1;
+  padding-top: 1rem;
+  font-size: 0.72rem;
+  color: #64748B;
+  line-height: 1.5;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printableBookingSlip, #printableBookingSlip * {
+    visibility: visible;
+  }
+  #printableBookingSlip {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 2rem;
+    box-shadow: none;
+    border: none;
+  }
+  .actionsBar {
+    display: none !important;
+  }
+  .overlay {
+    background: transparent !important;
+    padding: 0 !important;
+  }
+  .modal {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+  }
+}
