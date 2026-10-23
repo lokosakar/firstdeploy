@@ -1,32 +1,53 @@
-import { Plus_Jakarta_Sans, Inter } from 'next/font/google';
+import { Fraunces, Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from './lib/AuthContext';
 import { BookingProvider } from './lib/BookingContext';
 
-// Konfigurasi Font
-const plusJakarta = Plus_Jakarta_Sans({ 
+// Font judul: serif berkarakter (bukan font "default AI")
+const fraunces = Fraunces({
   subsets: ['latin'],
-  variable: '--font-jakarta',
+  variable: '--font-display',
+  display: 'swap',
+  axes: ['opsz', 'SOFT'],
+});
+
+// Font teks & UI
+const geist = Geist({
+  subsets: ['latin'],
+  variable: '--font-sans',
   display: 'swap',
 });
 
-const inter = Inter({ 
+// Font angka / kode booking
+const geistMono = Geist_Mono({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-mono',
   display: 'swap',
 });
 
 export const metadata = {
-  title: 'SMK Tri Ratna - Sistem Peminjaman Fasilitas Cerdas',
-  description: 'Layanan Reservasi & Manajemen Prasarana Akademik Cerdas SMK Tri Ratna.',
+  title: 'Sarpras SMK Tri Ratna — Peminjaman Ruang & Fasilitas',
+  description:
+    'Pinjam lab, auditorium, cetiya, dan lapangan SMK Tri Ratna secara online. Cek jadwal kosong, ajukan, dan pantau status persetujuan Sarpras.',
 };
+
+// Set tema sebelum halaman tampil supaya tidak "kedip" terang → gelap
+const themeScript = `(function(){try{var t=localStorage.getItem('sarpras_theme');if(t!=='dark'&&t!=='light'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t)}catch(e){}})();`;
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id" className={`${plusJakarta.variable} ${inter.variable}`}>
+    <html
+      lang="id"
+      className={`${fraunces.variable} ${geist.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
-        <BookingProvider>
-          {children}
-        </BookingProvider>
+        <AuthProvider>
+          <BookingProvider>{children}</BookingProvider>
+        </AuthProvider>
       </body>
     </html>
   );

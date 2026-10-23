@@ -9,18 +9,25 @@ import {
   Check, 
   X, 
   Search, 
-  Filter, 
   Eye, 
   Phone, 
   Building2, 
   Calendar, 
   Sparkles,
   Layers,
-  ArrowUpRight
+  Mail,
+  UserCheck,
+  AlertCircle
 } from 'lucide-react';
-import Sidebar from '../../components/Sidebar';
 import { useBooking } from '../../lib/BookingContext';
 import styles from './admin.module.css';
+
+const QUICK_REJECT_REASONS = [
+  'Jadwal bentrok dengan kegiatan resmi / ujian sekolah',
+  'Fasilitas sedang dalam masa pemeliharaan Sarpras',
+  'Pengajuan di luar jam operasional yang ditentukan',
+  'Dokumen atau detail agenda kegiatan kurang lengkap'
+];
 
 export default function AdminDashboard() {
   const contentRef = useRef(null);
@@ -39,22 +46,50 @@ export default function AdminDashboard() {
   const rejectedCount = requests.filter(r => r.status === 'rejected').length;
 
   const KPI_STATS = [
-    { id: 'total', label: 'Total Permohonan', value: totalCount, variant: 'default', sub: 'Semua permohonan masuk' },
-    { id: 'pending', label: 'Menunggu Review', value: pendingCount, variant: 'pending', sub: 'Perlu verifikasi Sarpras Segera' },
-    { id: 'approved', label: 'Disetujui Aktif', value: approvedCount, variant: 'approved', sub: 'Jadwal ruang terkonfirmasi' },
-    { id: 'rejected', label: 'Ditolak / Batal', value: rejectedCount, variant: 'rejected', sub: 'Tidak memenuhi syarat' }
+    { 
+      id: 'all', 
+      label: 'Total Permohonan', 
+      value: totalCount, 
+      variant: 'default', 
+      sub: 'Semua permohonan masuk',
+      icon: Layers
+    },
+    { 
+      id: 'pending', 
+      label: 'Menunggu Review', 
+      value: pendingCount, 
+      variant: 'pending', 
+      sub: 'Perlu verifikasi Sarpras segera',
+      icon: Clock
+    },
+    { 
+      id: 'approved', 
+      label: 'Disetujui Aktif', 
+      value: approvedCount, 
+      variant: 'approved', 
+      sub: 'Jadwal ruang terkonfirmasi',
+      icon: CheckCircle
+    },
+    { 
+      id: 'rejected', 
+      label: 'Ditolak / Batal', 
+      value: rejectedCount, 
+      variant: 'rejected', 
+      sub: 'Tidak memenuhi syarat',
+      icon: XCircle
+    }
   ];
 
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.fromTo('.stagger-item',
-        { y: 25, opacity: 0 },
-        { y: 0, opacity: 1, stagger: 0.08, duration: 0.6, ease: "power3.out" }
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, stagger: 0.07, duration: 0.55, ease: "power3.out" }
       );
 
       gsap.fromTo('.row-anim',
-        { opacity: 0, x: -10 },
-        { opacity: 1, x: 0, stagger: 0.05, duration: 0.4, ease: "power2.out", delay: 0.2 }
+        { opacity: 0, y: 8 },
+        { opacity: 1, y: 0, stagger: 0.04, duration: 0.35, ease: "power2.out", delay: 0.15 }
       );
     }, contentRef);
 
@@ -69,9 +104,19 @@ export default function AdminDashboard() {
       req.id.toLowerCase().includes(query) ||
       req.user.toLowerCase().includes(query) ||
       req.facility.toLowerCase().includes(query) ||
-      req.role.toLowerCase().includes(query);
+      req.role.toLowerCase().includes(query) ||
+      (req.picName && req.picName.toLowerCase().includes(query));
     return matchesFilter && matchesSearch;
   });
+
+  const getInitials = (name = '') => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || 'TR';
+  };
 
   const handleApprove = (id) => {
     updateBookingStatus(id, 'approved');
@@ -91,100 +136,139 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className={styles.layout}>
-      {/* SIDEBAR */}
-      <Sidebar />
-
-      {/* MAIN CONTENT */}
-      <main className={styles.mainContent} ref={contentRef}>
-        {/* HEADER SECTION */}
-        <header className={`stagger-item ${styles.header}`}>
-          <div className={styles.headerLeft}>
-            <span className={styles.headerBadge}>DIVISI SARANA & PRASARANA</span>
-            <h1>Manajemen Reservasi Fasilitas</h1>
-            <p className={styles.headerSubtitle}>Tahun Ajaran 2025/2026 • SMK Tri Ratna Jakarta</p>
+    <main className={styles.mainContent} ref={contentRef}>
+      {/* HEADER SECTION */}
+      <header className={`stagger-item ${styles.header}`}>
+        <div className={styles.headerLeft}>
+          <div className={styles.badgeWrapper}>
+            <span className={styles.headerBadge}>
+              <Sparkles size={12} /> DIVISI SARANA & PRASARANA
+            </span>
+            <span className={styles.schoolTag}>SMK Tri Ratna Jakarta</span>
           </div>
-        </header>
+          <h1>Manajemen Reservasi Fasilitas</h1>
+          <p className={styles.headerSubtitle}>
+            Panel kendali verifikasi peminjaman ruang & perlengkapan • Tahun Ajaran 2025/2026
+          </p>
+        </div>
 
-        {/* KPI CARDS GRID */}
-        <section className={styles.statsGrid} aria-label="Ringkasan Statistik">
-          {KPI_STATS.map((stat) => (
+        <div className={styles.headerRight}>
+          <div className={styles.quickStatusPill}>
+            <span className={pendingCount > 0 ? styles.statusDotWarn : styles.statusDotOk} />
+            <span>
+              {pendingCount > 0 
+                ? `${pendingCount} Permohonan MenungguTindakan` 
+                : 'Semua Permohonan Terverifikasi'}
+            </span>
+          </div>
+        </div>
+      </header>
+
+      {/* KPI CARDS GRID */}
+      <section className={styles.statsGrid} aria-label="Ringkasan Statistik">
+        {KPI_STATS.map((stat) => {
+          const IconComponent = stat.icon;
+          const isActive = filterStatus === stat.id;
+          return (
             <article
               key={stat.id}
-              className={`stagger-item ${styles.statCard} ${styles[`statCard_${stat.variant}`]}`}
+              onClick={() => setFilterStatus(stat.id)}
+              className={`stagger-item ${styles.statCard} ${styles[`statCard_${stat.variant}`]} ${isActive ? styles.statCardActive : ''}`}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && setFilterStatus(stat.id)}
             >
               <div className={styles.statTop}>
                 <h3 className={`${styles.statLabel} ${styles[`statLabel_${stat.variant}`]}`}>
                   {stat.label}
                 </h3>
-                {stat.id === 'pending' && stat.value > 0 && (
-                  <span className={styles.livePulseDot} />
-                )}
+                <div className={`${styles.statIconWrap} ${styles[`statIcon_${stat.variant}`]}`}>
+                  <IconComponent size={18} />
+                  {stat.id === 'pending' && stat.value > 0 && (
+                    <span className={styles.livePulseDot} />
+                  )}
+                </div>
               </div>
               <div className={`${styles.statValue} ${styles[`statValue_${stat.variant}`]}`}>
                 {stat.value}
               </div>
               <span className={styles.statSub}>{stat.sub}</span>
             </article>
-          ))}
-        </section>
+          );
+        })}
+      </section>
 
-        {/* CONTROLS & FILTER BAR */}
-        <section className={`stagger-item ${styles.controlsBar}`}>
-          <div className={styles.filterTabs}>
-            <button 
-              className={`${styles.filterBtn} ${filterStatus === 'all' ? styles.filterBtnActive : ''}`}
-              onClick={() => setFilterStatus('all')}
-            >
-              Semua ({totalCount})
-            </button>
-            <button 
-              className={`${styles.filterBtn} ${filterStatus === 'pending' ? styles.filterBtnActive : ''}`}
-              onClick={() => setFilterStatus('pending')}
-            >
-              Menunggu Review ({pendingCount})
-            </button>
-            <button 
-              className={`${styles.filterBtn} ${filterStatus === 'approved' ? styles.filterBtnActive : ''}`}
-              onClick={() => setFilterStatus('approved')}
-            >
-              Disetujui ({approvedCount})
-            </button>
-            <button 
-              className={`${styles.filterBtn} ${filterStatus === 'rejected' ? styles.filterBtnActive : ''}`}
-              onClick={() => setFilterStatus('rejected')}
-            >
-              Ditolak ({rejectedCount})
-            </button>
-          </div>
+      {/* CONTROLS & FILTER BAR */}
+      <section className={`stagger-item ${styles.controlsBar}`}>
+        <div className={styles.filterTabs}>
+          <button 
+            className={`${styles.filterBtn} ${filterStatus === 'all' ? styles.filterBtnActive : ''}`}
+            onClick={() => setFilterStatus('all')}
+          >
+            Semua <span className={styles.tabCount}>{totalCount}</span>
+          </button>
+          <button 
+            className={`${styles.filterBtn} ${filterStatus === 'pending' ? styles.filterBtnActive : ''}`}
+            onClick={() => setFilterStatus('pending')}
+          >
+            Menunggu Review <span className={`${styles.tabCount} ${styles.tabCountPending}`}>{pendingCount}</span>
+          </button>
+          <button 
+            className={`${styles.filterBtn} ${filterStatus === 'approved' ? styles.filterBtnActive : ''}`}
+            onClick={() => setFilterStatus('approved')}
+          >
+            Disetujui <span className={styles.tabCount}>{approvedCount}</span>
+          </button>
+          <button 
+            className={`${styles.filterBtn} ${filterStatus === 'rejected' ? styles.filterBtnActive : ''}`}
+            onClick={() => setFilterStatus('rejected')}
+          >
+            Ditolak <span className={styles.tabCount}>{rejectedCount}</span>
+          </button>
+        </div>
 
-          <div className={styles.searchBox}>
-            <Search size={16} className={styles.searchIcon} />
-            <input 
-              type="text" 
-              placeholder="Cari nomor ID, nama pemohon, atau ruangan..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={styles.searchInput}
-            />
-            {searchTerm && (
-              <button onClick={() => setSearchTerm('')} className={styles.clearBtn}>×</button>
+        <div className={styles.searchBox}>
+          <Search size={16} className={styles.searchIcon} />
+          <input 
+            type="text" 
+            placeholder="Cari ID, nama pemohon, PIC, atau ruangan..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={styles.searchInput}
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} className={styles.clearBtn} title="Hapus pencarian">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      </section>
+
+      {/* DATA TABLE SECTION */}
+      <section className={`stagger-item ${styles.tableContainer}`} aria-label="Tabel Permohonan">
+        {filteredRequests.length === 0 ? (
+          <div className={styles.emptyTable}>
+            <div className={styles.emptyIconCircle}>
+              <Search size={24} />
+            </div>
+            <h4>Tidak Ada Data Permohonan</h4>
+            <p>Tidak ditemukan permohonan yang sesuai dengan filter atau kata kunci pencarian saat ini.</p>
+            {(filterStatus !== 'all' || searchTerm) && (
+              <button 
+                className={styles.resetFilterBtn}
+                onClick={() => { setFilterStatus('all'); setSearchTerm(''); }}
+              >
+                Reset Filter & Pencarian
+              </button>
             )}
           </div>
-        </section>
-
-        {/* DATA TABLE SECTION */}
-        <section className={`stagger-item ${styles.tableContainer}`} aria-label="Tabel Permohonan">
-          {filteredRequests.length === 0 ? (
-            <div className={styles.emptyTable}>
-              <p>Tidak ada permohonan yang sesuai dengan filter atau kata kunci saat ini.</p>
-            </div>
-          ) : (
+        ) : (
+          <div className={styles.tableResponsive}>
             <table className={styles.table}>
               <thead>
                 <tr>
                   <th>Kode & Pemohon</th>
-                  <th>Fasilitas</th>
+                  <th>Fasilitas Ruangan</th>
                   <th>Jadwal Pelaksanaan</th>
                   <th>Agenda Kegiatan</th>
                   <th>Status</th>
@@ -195,24 +279,45 @@ export default function AdminDashboard() {
                 {filteredRequests.map((req) => (
                   <tr key={req.id} className="row-anim">
                     <td>
-                      <div className={styles.userData}>
-                        <span className={styles.requestId}>{req.id}</span>
-                        <span className={styles.userName}>{req.user}</span>
-                        <span className={styles.userSub}>{req.role}</span>
+                      <div className={styles.requesterCell}>
+                        <div className={styles.avatarCircle}>
+                          {getInitials(req.user)}
+                        </div>
+                        <div className={styles.userData}>
+                          <span className={styles.requestId}>{req.id}</span>
+                          <span className={styles.userName}>{req.user}</span>
+                          {req.picName && (
+                            <span className={styles.picBadge}>
+                              <UserCheck size={11} /> PIC: {req.picName}
+                            </span>
+                          )}
+                          {req.email && req.email !== '-' && (
+                            <span className={styles.userEmail}>
+                              {req.email}
+                            </span>
+                          )}
+                          <span className={styles.userSub}>{req.role}</span>
+                        </div>
                       </div>
                     </td>
 
                     <td>
                       <div className={styles.facilityCell}>
-                        <Building2 size={15} color="var(--primary)" />
+                        <div className={styles.facilityIconBox}>
+                          <Building2 size={16} />
+                        </div>
                         <span className={styles.fw600}>{req.facility}</span>
                       </div>
                     </td>
 
                     <td>
-                      <div className={styles.userData}>
-                        <span className={styles.userName}>{req.formattedDate || req.date}</span>
-                        <span className={styles.userSub}>{req.time}</span>
+                      <div className={styles.scheduleCell}>
+                        <span className={styles.scheduleDate}>
+                          <Calendar size={13} /> {req.formattedDate || req.date}
+                        </span>
+                        <span className={styles.scheduleTime}>
+                          <Clock size={12} /> {req.time}
+                        </span>
                       </div>
                     </td>
 
@@ -220,7 +325,7 @@ export default function AdminDashboard() {
                       <p className={styles.purposeText}>{req.purpose}</p>
                       {req.equipment?.length > 0 && (
                         <span className={styles.equipmentTagBadge}>
-                          +{req.equipment.length} Perlengkapan
+                          +{req.equipment.length} Perlengkapan Tambahan
                         </span>
                       )}
                     </td>
@@ -275,7 +380,7 @@ export default function AdminDashboard() {
                           </>
                         ) : (
                           <span className={styles.actionDone}>
-                            {req.status === 'approved' ? 'Telah Disetujui' : 'Telah Ditolak'}
+                            {req.status === 'approved' ? 'Terverifikasi' : 'Dibatalkan'}
                           </span>
                         )}
                       </div>
@@ -284,9 +389,9 @@ export default function AdminDashboard() {
                 ))}
               </tbody>
             </table>
-          )}
-        </section>
-      </main>
+          </div>
+        )}
+      </section>
 
       {/* DETAIL MODAL */}
       {selectedDetail && (
@@ -294,31 +399,55 @@ export default function AdminDashboard() {
           <div className={styles.detailCard} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHead}>
               <div>
-                <span className={styles.resCodeBadge}>{selectedDetail.id}</span>
+                <div className={styles.modalBadgeRow}>
+                  <span className={styles.resCodeBadge}>{selectedDetail.id}</span>
+                  {selectedDetail.status === 'pending' && (
+                    <span className={`${styles.badge} ${styles.pending}`}>Menunggu Review</span>
+                  )}
+                  {selectedDetail.status === 'approved' && (
+                    <span className={`${styles.badge} ${styles.approved}`}>Disetujui</span>
+                  )}
+                  {selectedDetail.status === 'rejected' && (
+                    <span className={`${styles.badge} ${styles.rejected}`}>Ditolak</span>
+                  )}
+                </div>
                 <h3>Detail Permohonan Peminjaman</h3>
               </div>
-              <button className={styles.closeBtn} onClick={() => setSelectedDetail(null)}>
+              <button className={styles.closeBtn} onClick={() => setSelectedDetail(null)} aria-label="Tutup modal">
                 <X size={20} />
               </button>
             </div>
 
             <div className={styles.modalBody}>
               <div className={styles.detailGrid}>
-                <div>
+                <div className={styles.detailBox}>
                   <span className={styles.dLabel}>Ruangan / Prasarana</span>
-                  <p className={styles.dVal}>{selectedDetail.facility}</p>
+                  <p className={styles.dVal}>
+                    <Building2 size={15} className={styles.dIcon} /> {selectedDetail.facility}
+                  </p>
                 </div>
-                <div>
-                  <span className={styles.dLabel}>Nama Penanggung Jawab</span>
+                <div className={styles.detailBox}>
+                  <span className={styles.dLabel}>Akun Resmi Pemohon</span>
                   <p className={styles.dVal}>{selectedDetail.user} ({selectedDetail.role})</p>
                 </div>
-                <div>
-                  <span className={styles.dLabel}>Jadwal Penggunaan</span>
-                  <p className={styles.dVal}>{selectedDetail.formattedDate} • {selectedDetail.time}</p>
+                <div className={styles.detailBox}>
+                  <span className={styles.dLabel}>Siswa PIC / Penanggung Jawab</span>
+                  <p className={styles.dVal}>{selectedDetail.picName || selectedDetail.user}</p>
                 </div>
-                <div>
-                  <span className={styles.dLabel}>Kontak WhatsApp</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+                <div className={styles.detailBox}>
+                  <span className={styles.dLabel}>Email Resmi Terdaftar</span>
+                  <p className={styles.dVal}>
+                    <Mail size={14} className={styles.dIconMuted} /> {selectedDetail.email || '-'}
+                  </p>
+                </div>
+                <div className={styles.detailBox}>
+                  <span className={styles.dLabel}>Jadwal Penggunaan</span>
+                  <p className={styles.dVal}>{selectedDetail.formattedDate || selectedDetail.date}</p>
+                  <span className={styles.dSubTime}>{selectedDetail.time}</span>
+                </div>
+                <div className={styles.detailBox}>
+                  <span className={styles.dLabel}>Kontak WhatsApp PIC</span>
+                  <div className={styles.waRow}>
                     <span className={styles.dVal}>{selectedDetail.phone || '-'}</span>
                     {selectedDetail.phone && (
                       <a 
@@ -327,7 +456,7 @@ export default function AdminDashboard() {
                         rel="noreferrer"
                         className={styles.waLink}
                       >
-                        <Phone size={12} /> Hubungi
+                        <Phone size={12} /> Hubungi WA
                       </a>
                     )}
                   </div>
@@ -340,11 +469,13 @@ export default function AdminDashboard() {
                   {selectedDetail.equipment?.length > 0 ? (
                     selectedDetail.equipment.map((eq, i) => (
                       <span key={i} className={styles.equipPill}>
-                        <Check size={12} color="#059669" /> {eq}
+                        <Check size={12} className={styles.equipCheck} /> {eq}
                       </span>
                     ))
                   ) : (
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Tidak ada peralatan tambahan yang diminta.</span>
+                    <span className={styles.noEquipText}>
+                      Tidak ada peralatan tambahan yang diminta.
+                    </span>
                   )}
                 </div>
               </div>
@@ -356,14 +487,17 @@ export default function AdminDashboard() {
 
               {selectedDetail.status === 'rejected' && selectedDetail.rejectReason && (
                 <div className={styles.rejectNotice}>
-                  <strong>Alasan Penolakan:</strong> {selectedDetail.rejectReason}
+                  <AlertCircle size={16} />
+                  <div>
+                    <strong>Alasan Penolakan:</strong> {selectedDetail.rejectReason}
+                  </div>
                 </div>
               )}
             </div>
 
             <div className={styles.modalFoot}>
-              {selectedDetail.status === 'pending' && (
-                <div style={{ display: 'flex', gap: '0.75rem', width: '100%', justifyContent: 'flex-end' }}>
+              {selectedDetail.status === 'pending' ? (
+                <div className={styles.modalActionRow}>
                   <button 
                     className={styles.btnModalReject} 
                     onClick={() => {
@@ -372,7 +506,7 @@ export default function AdminDashboard() {
                       handleOpenRejectModal(item);
                     }}
                   >
-                    Tolak Permohonan
+                    <X size={16} /> Tolak Permohonan
                   </button>
                   <button 
                     className={styles.btnModalApprove}
@@ -381,13 +515,12 @@ export default function AdminDashboard() {
                       setSelectedDetail(null);
                     }}
                   >
-                    Setujui Reservasi
+                    <Check size={16} /> Setujui Reservasi
                   </button>
                 </div>
-              )}
-              {selectedDetail.status !== 'pending' && (
+              ) : (
                 <button className={styles.btnDoneClose} onClick={() => setSelectedDetail(null)}>
-                  Tutup
+                  Tutup Detail
                 </button>
               )}
             </div>
@@ -399,27 +532,50 @@ export default function AdminDashboard() {
       {rejectingItem && (
         <div className={styles.modalOverlay} onClick={() => setRejectingItem(null)}>
           <div className={styles.rejectCard} onClick={e => e.stopPropagation()}>
-            <h3>Tolak Permohonan Reservasi</h3>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-              Anda akan menolak permohonan <strong>{rejectingItem.id}</strong> dari <strong>{rejectingItem.user}</strong>.
-            </p>
+            <div className={styles.rejectHeader}>
+              <div className={styles.rejectWarningIcon}>
+                <AlertCircle size={22} />
+              </div>
+              <div>
+                <h3>Tolak Permohonan Reservasi</h3>
+                <p className={styles.rejectSub}>
+                  Permohonan <strong>{rejectingItem.id}</strong> oleh <strong>{rejectingItem.user}</strong> ({rejectingItem.facility})
+                </p>
+              </div>
+            </div>
 
             <form onSubmit={handleConfirmReject}>
-              <div style={{ marginBottom: '1.25rem' }}>
-                <label style={{ fontSize: '0.82rem', fontWeight: 600, display: 'block', marginBottom: '0.4rem' }}>
-                  Alasan Penolakan (akan ditampilkan ke pemohon):
+              <div className={styles.quickReasonSection}>
+                <span className={styles.quickReasonLabel}>Pilih Cepat Alasan Umum:</span>
+                <div className={styles.quickReasonList}>
+                  {QUICK_REJECT_REASONS.map((reason, idx) => (
+                    <button
+                      type="button"
+                      key={idx}
+                      className={`${styles.quickReasonChip} ${rejectReason === reason ? styles.quickReasonChipActive : ''}`}
+                      onClick={() => setRejectReason(reason)}
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.rejectInputGroup}>
+                <label className={styles.rejectLabel}>
+                  Alasan Penolakan (ditampilkan kepada pemohon):
                 </label>
                 <textarea 
                   rows="3" 
                   className={styles.rejectTextarea}
-                  placeholder="Contoh: Jadwal bentrok dengan acara ujian sekolah atau di luar ketentuan jam dinas..."
+                  placeholder="Tulis alasan penolakan atau pilih dari opsi di atas..."
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   required
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <div className={styles.rejectFoot}>
                 <button 
                   type="button" 
                   className={styles.btnCancel} 
@@ -435,6 +591,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

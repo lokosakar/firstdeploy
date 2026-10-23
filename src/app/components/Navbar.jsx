@@ -15,21 +15,23 @@ import {
   XCircle, 
   ArrowRight,
   ShieldCheck,
-  CalendarCheck
+  CalendarCheck,
+  Sun,
+  Moon,
+  LogIn,
+  LogOut,
+  User,
+  GraduationCap
 } from 'lucide-react';
 import { useBooking } from '../lib/BookingContext';
+import { useAuth } from '../lib/AuthContext';
 import styles from './Navbar.module.css';
-
-const NAV_LINKS = [
-  { name: "Beranda", path: "/" },
-  { name: "Katalog Fasilitas", path: "/user/booking" },
-  { name: "Panel Sarpras", path: "/admin/dashboard" },
-];
 
 export default function Navbar() {
   const navRef = useRef(null);
   const pathname = usePathname();
   const { requests, searchBooking } = useBooking();
+  const { currentUser, isAdmin, isSiswa, isAuthenticated, logout, theme, toggleTheme } = useAuth();
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -38,7 +40,15 @@ export default function Navbar() {
   const [searchResult, setSearchResult] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Recent 4 notifications from requests
+  // Dynamic navigation links based on user role:
+  // Role 'siswa' or Guest will NOT see 'Panel Sarpras'
+  const navLinks = [
+    { name: "Beranda", path: "/" },
+    { name: "Katalog Fasilitas", path: "/user/booking" },
+    ...(isAdmin ? [{ name: "Panel Sarpras", path: "/admin/dashboard" }] : [])
+  ];
+
+  // Recent notifications from requests
   const recentNotifs = requests.slice(0, 4);
   const pendingCount = requests.filter(r => r.status === 'pending').length;
 
@@ -46,7 +56,7 @@ export default function Navbar() {
     const ctx = gsap.context(() => {
       gsap.fromTo(navRef.current,
         { y: -80, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }
+        { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }
       );
     });
 
@@ -67,19 +77,17 @@ export default function Navbar() {
         <div className={styles.navContainer}>
           {/* Brand / Logo */}
           <Link href="/" className={styles.brand} aria-label="Beranda SMK Tri Ratna">
-            <div className={styles.logoBadge}>
-              <School size={22} color="#ffffff" aria-hidden="true" />
-            </div>
+            <span className={styles.logoBadge} aria-hidden="true">TR</span>
             <div className={styles.brandTextWrapper}>
               <span className={styles.brandName}>SMK Tri Ratna</span>
-              <span className={styles.brandSub}>Sarpras Digital</span>
+              <span className={styles.brandSub}>Peminjaman Sarpras</span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
           <div className={styles.desktopNav}>
             <div className={styles.navLinks}>
-              {NAV_LINKS.map((link) => {
+              {navLinks.map((link) => {
                 const isActive = link.path === "/" 
                   ? pathname === "/" 
                   : pathname.startsWith(link.path);
@@ -110,8 +118,8 @@ export default function Navbar() {
               }}
               title="Lacak Status Peminjaman"
             >
-              <Search size={15} />
-              <span>Lacak Booking</span>
+              <Search size={14} />
+              <span>Lacak</span>
             </button>
 
             {/* Notification Bell with Dropdown */}
@@ -122,7 +130,7 @@ export default function Navbar() {
                 aria-label="Notifikasi Permohonan"
                 title="Aktivitas Terbaru"
               >
-                <Bell size={18} />
+                <Bell size={17} />
                 {pendingCount > 0 && (
                   <span className={styles.notifBadge}>{pendingCount}</span>
                 )}
@@ -141,9 +149,9 @@ export default function Navbar() {
                       recentNotifs.map((item) => (
                         <div key={item.id} className={styles.notifItem}>
                           <div className={styles.notifIcon}>
-                            {item.status === 'pending' && <Clock size={16} color="#D97706" />}
-                            {item.status === 'approved' && <CheckCircle size={16} color="#059669" />}
-                            {item.status === 'rejected' && <XCircle size={16} color="#E11D48" />}
+                            {item.status === 'pending' && <Clock size={16} className={styles.icoPending} />}
+                            {item.status === 'approved' && <CheckCircle size={16} className={styles.icoApproved} />}
+                            {item.status === 'rejected' && <XCircle size={16} className={styles.icoRejected} />}
                           </div>
                           <div className={styles.notifContent}>
                             <div className={styles.notifTitleRow}>
@@ -161,35 +169,59 @@ export default function Navbar() {
                       ))
                     )}
                   </div>
-                  <Link 
-                    href="/admin/dashboard" 
-                    className={styles.notifFooter}
-                    onClick={() => setNotifOpen(false)}
-                  >
-                    <span>Buka Panel Sarpras</span>
-                    <ArrowRight size={14} />
-                  </Link>
+                  {isAdmin && (
+                    <Link 
+                      href="/admin/dashboard" 
+                      className={styles.notifFooter}
+                      onClick={() => setNotifOpen(false)}
+                    >
+                      <span>Buka Panel Sarpras</span>
+                      <ArrowRight size={14} />
+                    </Link>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Role Badge Link */}
-            <Link 
-              href={pathname.startsWith('/admin') ? "/user/booking" : "/admin/dashboard"} 
-              className={styles.roleSwitchBtn}
+            {/* Dark / Light Mode Switcher */}
+            <button
+              onClick={toggleTheme}
+              className={styles.themeToggleBtn}
+              title={theme === 'dark' ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'}
+              aria-label="Toggle Dark Mode"
+              type="button"
             >
-              {pathname.startsWith('/admin') ? (
-                <>
-                  <CalendarCheck size={16} />
-                  <span>Mode Siswa/Guru</span>
-                </>
-              ) : (
-                <>
-                  <ShieldCheck size={16} />
-                  <span>Masuk Admin</span>
-                </>
-              )}
-            </Link>
+              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+
+            {/* Authentication Profile / Login CTA */}
+            {isAuthenticated ? (
+              <div className={styles.userProfileMenu}>
+                <div className={styles.userPill}>
+                  <div className={styles.userAvatarBadge}>
+                    {isAdmin ? <ShieldCheck size={15} /> : <GraduationCap size={15} />}
+                  </div>
+                  <div className={styles.userInfoCol}>
+                    <span className={styles.userFullName}>{currentUser.name}</span>
+                    <span className={styles.userRoleTag}>{isAdmin ? 'Admin Sarpras' : (currentUser.classGrade || 'Siswa')}</span>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={logout} 
+                  className={styles.logoutNavBtn}
+                  title="Keluar dari akun"
+                  type="button"
+                >
+                  <LogOut size={15} />
+                </button>
+              </div>
+            ) : (
+              <Link href="/login" className={styles.loginNavBtn}>
+                <span>Masuk</span>
+                <ArrowRight size={15} />
+              </Link>
+            )}
           </div>
 
           {/* Mobile Hamburger Toggle */}
@@ -205,7 +237,7 @@ export default function Navbar() {
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
           <div className={styles.mobileNav}>
-            {NAV_LINKS.map((link) => {
+            {navLinks.map((link) => {
               const isActive = link.path === "/" 
                 ? pathname === "/" 
                 : pathname.startsWith(link.path);
@@ -232,14 +264,42 @@ export default function Navbar() {
               <Search size={16} />
               <span>Lacak Status Reservasi</span>
             </button>
-            
-            <Link 
-              href={pathname.startsWith('/admin') ? "/user/booking" : "/admin/dashboard"}
-              className={styles.mobileRoleBtn}
-              onClick={() => setMobileMenuOpen(false)}
+
+            <button 
+              className={styles.mobileThemeBtn}
+              onClick={toggleTheme}
             >
-              {pathname.startsWith('/admin') ? "Mode Siswa/Guru" : "Panel Sarpras Admin"}
-            </Link>
+              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+              <span>{theme === 'dark' ? 'Mode Terang' : 'Mode Gelap'}</span>
+            </button>
+            
+            {isAuthenticated ? (
+              <div className={styles.mobileUserBox}>
+                <div className={styles.mobileUserInfo}>
+                  <strong>{currentUser.name}</strong>
+                  <span>{currentUser.roleLabel || (isAdmin ? 'Admin Sarpras' : 'Siswa')}</span>
+                </div>
+                <button 
+                  onClick={() => {
+                    logout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className={styles.mobileLogoutBtn}
+                >
+                  <LogOut size={16} />
+                  <span>Keluar Sesi</span>
+                </button>
+              </div>
+            ) : (
+              <Link 
+                href="/login"
+                className={styles.mobileLoginBtn}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <LogIn size={16} />
+                <span>Masuk / Daftar Akun</span>
+              </Link>
+            )}
           </div>
         )}
       </nav>

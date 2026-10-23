@@ -153,7 +153,32 @@ export function BookingProvider({ children }) {
     try {
       const savedFacilities = localStorage.getItem('tr_facilities');
       const savedRequests = localStorage.getItem('tr_requests');
-      if (savedFacilities) setFacilities(JSON.parse(savedFacilities));
+      if (savedFacilities) {
+        const parsed = JSON.parse(savedFacilities);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Gabungkan data tersimpan dengan data bawaan supaya foto fasilitas
+          // bawaan tidak pernah hilang (cache lama sering tidak menyimpan path gambar).
+          const merged = parsed.map((fac) => {
+            const base = INITIAL_FACILITIES.find((f) => f.id === fac.id);
+            if (!base) return fac;
+            const hasValidImage =
+              typeof fac.image === 'string' &&
+              (fac.image.startsWith('/images/') || fac.image.startsWith('data:'));
+            return {
+              ...base,
+              ...fac,
+              image: hasValidImage ? fac.image : base.image,
+              amenities: fac.amenities?.length ? fac.amenities : base.amenities,
+            };
+          });
+          // Pastikan fasilitas bawaan yang hilang dari cache dikembalikan
+          INITIAL_FACILITIES.forEach((base) => {
+            if (!merged.some((f) => f.id === base.id)) merged.push(base);
+          });
+          merged.sort((a, b) => a.id - b.id);
+          setFacilities(merged);
+        }
+      }
       if (savedRequests) setRequests(JSON.parse(savedRequests));
     } catch (e) {
       console.warn(e);
@@ -220,7 +245,11 @@ export function BookingProvider({ children }) {
     const newBooking = {
       id: bookingCode,
       user: data.user,
-      role: data.role || "Siswa / Guru",
+      email: data.email || "-",
+      classGrade: data.classGrade || "-",
+      unit: data.unit || "SMK",
+      picName: data.picName || "",
+      role: data.role || "Perwakilan Kelas",
       phone: data.phone || "-",
       facilityId: data.facilityId,
       facility: data.facility,
@@ -230,6 +259,7 @@ export function BookingProvider({ children }) {
       timeEnd: data.timeEnd,
       time: `${data.timeStart} - ${data.timeEnd}`,
       purpose: data.purpose,
+      participants: data.participants || null,
       equipment: data.equipment || [],
       status: data.status || "pending",
       createdAt: new Date().toISOString()
@@ -335,22 +365,29 @@ export function BookingProvider({ children }) {
       {toast && (
         <div style={{
           position: 'fixed',
-          bottom: '2rem',
-          right: '2rem',
+          bottom: '1.75rem',
+          right: '1.75rem',
           zIndex: 9999,
           display: 'flex',
           alignItems: 'center',
-          gap: '0.85rem',
-          padding: '1rem 1.4rem',
-          borderRadius: '0.85rem',
-          background: toast.type === 'error' ? '#991B1B' : toast.type === 'warning' ? '#9A3412' : toast.type === 'info' ? '#1E293B' : '#065F46',
-          color: '#FFFFFF',
-          boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25), 0 8px 10px -6px rgba(0,0,0,0.2)',
-          fontSize: '0.92rem',
+          gap: '0.75rem',
+          padding: '0.85rem 1.15rem',
+          borderRadius: '9px',
+          background: 'var(--surface-card)',
+          color: 'var(--text-main)',
+          boxShadow: 'var(--shadow-xl)',
+          fontSize: '0.88rem',
           fontWeight: '500',
-          maxWidth: '440px',
-          animation: 'slideUpToast 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-          border: '1px solid rgba(255,255,255,0.2)'
+          maxWidth: '420px',
+          animation: 'slideUpToast 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+          border: '1px solid var(--border-color)',
+          borderLeft: `4px solid ${
+            toast.type === 'error'
+              ? 'var(--status-rejected-text)'
+              : toast.type === 'warning'
+              ? 'var(--status-pending-text)'
+              : 'var(--primary)'
+          }`
         }}>
           <span>{toast.message}</span>
           <button
@@ -358,11 +395,12 @@ export function BookingProvider({ children }) {
             style={{
               background: 'transparent',
               border: 'none',
-              color: 'rgba(255,255,255,0.8)',
-              fontSize: '1.2rem',
+              color: 'var(--text-muted)',
+              fontSize: '1.15rem',
               cursor: 'pointer',
               marginLeft: 'auto',
-              padding: '0 0.2rem'
+              padding: '0 0.2rem',
+              lineHeight: 1
             }}
             aria-label="Tutup notifikasi"
           >

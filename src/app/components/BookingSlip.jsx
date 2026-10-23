@@ -7,6 +7,7 @@ import styles from './BookingSlip.module.css';
 export default function BookingSlip({ booking, onClose }) {
   if (!booking) return null;
 
+
   const handlePrint = () => {
     window.print();
   };
@@ -59,10 +60,10 @@ export default function BookingSlip({ booking, onClose }) {
           <table className={styles.slipTable}>
             <tbody>
               <tr>
-                <td className={styles.thCol}>Nama Penanggung Jawab</td>
-                <td className={styles.tdCol}><strong>{booking.user}</strong></td>
-                <td className={styles.thCol}>Peran / Jabatan</td>
-                <td className={styles.tdCol}>{booking.role}</td>
+                <td className={styles.thCol}>Akun Resmi Pemohon</td>
+                <td className={styles.tdCol}><strong>{booking.user}</strong><br /><small style={{ color: '#475569' }}>{booking.email || '-'}</small></td>
+                <td className={styles.thCol}>Siswa PIC Lapangan</td>
+                <td className={styles.tdCol}><strong>{booking.picName || booking.user}</strong><br /><small style={{ color: '#475569' }}>{booking.role}</small></td>
               </tr>
               <tr>
                 <td className={styles.thCol}>Fasilitas / Ruangan</td>

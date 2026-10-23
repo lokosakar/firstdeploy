@@ -10,93 +10,69 @@ import {
   Users,
   MapPin,
   ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
-  Clock,
-  Calendar,
+  ArrowUpRight,
   Search,
-  Sparkles,
-  Layers,
-  Zap,
-  FileCheck,
-  Check
+  CalendarCheck2,
+  ShieldCheck,
+  Ticket,
+  PackagePlus,
+  CircleCheck,
 } from 'lucide-react';
 
 import Navbar from './components/Navbar';
 import Modal from './components/Modal';
 import { useBooking } from './lib/BookingContext';
+import { useAuth, OFFICIAL_CLASS_ACCOUNTS } from './lib/AuthContext';
 import styles from './page.module.css';
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+const STATUS_LABEL = {
+  pending: 'Sedang ditinjau',
+  approved: 'Disetujui',
+  rejected: 'Ditolak',
+};
+
 export default function Home() {
   const containerRef = useRef(null);
   const { facilities, requests, searchBooking } = useBooking();
+  const { isAdmin, isAuthenticated } = useAuth();
   const [selectedFacility, setSelectedFacility] = useState(null);
   const [quickCode, setQuickCode] = useState('');
   const [quickResult, setQuickResult] = useState(null);
   const [searched, setSearched] = useState(false);
 
-
-  const approvedRequests = requests.filter(r => r.status === 'approved').slice(0, 3);
+  const latestApproved = requests.find((r) => r.status === 'approved');
+  const pendingCount = requests.filter((r) => r.status === 'pending').length;
+  const availableCount = facilities.filter((f) => f.status === 'Tersedia').length;
+  const heroImages = facilities.filter((f) => f.image).slice(0, 3);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-
       gsap.fromTo('.hero-anim',
-        { y: 35, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, stagger: 0.15, ease: "power3.out" }
+        { y: 18, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.7, stagger: 0.08, ease: "power3.out" }
       );
 
+      gsap.fromTo('.hero-photo',
+        { y: 24, opacity: 0, scale: 0.98 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.9, stagger: 0.12, ease: "power3.out", delay: 0.15 }
+      );
 
-      gsap.fromTo('.stat-item',
-        { y: 30, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.6,
-          stagger: 0.1,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: `.${styles.statsSection}`,
-            start: "top 85%"
+      gsap.utils.toArray('.reveal').forEach((el) => {
+        gsap.fromTo(el,
+          { y: 24, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: { trigger: el, start: "top 88%" }
           }
-        }
-      );
-
-      // Showcase cards
-      gsap.fromTo('.facility-card-anim',
-        { y: 40, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.7,
-          stagger: 0.15,
-          ease: "back.out(1.2)",
-          scrollTrigger: {
-            trigger: `.${styles.showcaseGrid}`,
-            start: "top 85%"
-          }
-        }
-      );
-
-      // Feature items
-      gsap.fromTo('.feature-anim',
-        { y: 30, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.6,
-          stagger: 0.12,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: `.${styles.featuresGrid}`,
-            start: "top 85%"
-          }
-        }
-      );
+        );
+      });
     }, containerRef);
 
     return () => ctx.revert();
@@ -110,333 +86,277 @@ export default function Home() {
     setSearched(true);
   };
 
+  const secondaryCta = isAdmin
+    ? { href: '/admin/dashboard', label: 'Buka panel Sarpras' }
+    : isAuthenticated
+      ? { href: '/user/booking', label: 'Lihat pengajuan saya' }
+      : { href: '/login', label: 'Masuk akun kelas' };
+
   return (
     <div className={styles.pageWrapper} ref={containerRef}>
       <Navbar />
 
-      {/* HERO SECTION */}
-      <section className={styles.heroSection}>
-        <div className={styles.heroGlow} aria-hidden="true" />
+      {/* HERO */}
+      <section className={styles.hero}>
+        <div className={styles.heroInner}>
+          <div className={styles.heroCopy}>
+            <p className={`hero-anim ${styles.eyebrow}`}>
+              <span className={styles.eyebrowLine} />
+              SMK &amp; SMA Tri Ratna · Jakarta Barat
+            </p>
 
-        <div className={styles.heroContainer}>
-          <div className={`hero-anim ${styles.badgeWrapper}`}>
-            <span className={styles.heroBadge}>
-              <Sparkles size={15} className={styles.sparkleIcon} />
-              SISTEM RESERVASI PRASARANA DIGITAL • SMK TRI RATNA
-            </span>
-          </div>
+            <h1 className={`hero-anim ${styles.heroTitle}`}>
+              Pinjam ruang sekolah tanpa <em>bolak-balik</em> ke ruang Sarpras.
+            </h1>
 
-          <h1 className={`hero-anim ${styles.heroTitle}`}>
-            Peminjaman Fasilitas Sekolah Jadi <span className="gradient-text">Cerdas, Cepat & Terorganisir</span>.
-          </h1>
+            <p className={`hero-anim ${styles.heroSubtitle}`}>
+              Cek jadwal lab, auditorium, cetiya, dan lapangan. Ajukan dari HP,
+              lalu pantau statusnya sampai disetujui.
+            </p>
 
-          <p className={`hero-anim ${styles.heroSubtitle}`}>
-            Akses resmi reservasi sarana dan prasarana akademik SMK Tri Ratna. Dari laboratorium komputer Apple iMac hingga auditorium berstandar tinggi—cek ketersediaan jadwal real-time, bebas bentrok, dan diverifikasi transparan oleh Admin Sarpras.
-          </p>
+            <div className={`hero-anim ${styles.ctaRow}`}>
+              <Link href="/user/booking" id="cta-katalog" className={styles.btnPrimary}>
+                <span>Lihat fasilitas</span>
+                <ArrowRight size={17} />
+              </Link>
+              <Link href={secondaryCta.href} id="cta-secondary" className={styles.btnGhost}>
+                {secondaryCta.label}
+              </Link>
+            </div>
 
-          <div className={`hero-anim ${styles.heroCtaGroup}`}>
-            <Link href="/user/booking" className={styles.btnPrimary}>
-              <span>Jelajahi & Reservasi Ruang</span>
-              <ArrowRight size={18} />
-            </Link>
-
-            <Link href="/admin/dashboard" className={styles.btnSecondary}>
-              <ShieldCheck size={18} />
-              <span>Panel Sarpras Admin</span>
-            </Link>
-          </div>
-
-          {/* QUICK TRACK BAR */}
-          <div className={`hero-anim ${styles.quickTrackCard}`}>
-            <form onSubmit={handleQuickSearch} className={styles.quickTrackForm}>
-              <div className={styles.quickTrackLeft}>
-                <Search size={20} className={styles.searchIcon} />
+            {/* LACAK CEPAT */}
+            <form onSubmit={handleQuickSearch} className={`hero-anim ${styles.trackForm}`}>
+              <label htmlFor="quick-track" className={styles.trackLabel}>
+                Sudah mengajukan? Lacak di sini
+              </label>
+              <div className={styles.trackRow}>
+                <Search size={16} className={styles.trackIcon} />
                 <input
+                  id="quick-track"
                   type="text"
-                  placeholder="Lacak status booking Anda (contoh: TR-2025-089 atau nama)"
+                  placeholder="Kode booking, mis. TR-2025-089"
                   value={quickCode}
                   onChange={(e) => setQuickCode(e.target.value)}
-                  className={styles.quickInput}
+                  className={styles.trackInput}
                 />
+                <button type="submit" className={styles.trackBtn}>Cek</button>
               </div>
-              <button type="submit" className={styles.quickBtn}>
-                Cek Status
-              </button>
-            </form>
 
-            {searched && (
-              <div className={styles.quickResultArea}>
-                {quickResult ? (
-                  <div className={styles.quickResultBox}>
-                    <div className={styles.qResLeft}>
-                      <span className={styles.qResId}>{quickResult.id}</span>
-                      <strong className={styles.qResFac}>{quickResult.facility}</strong>
-                      <span className={styles.qResDate}>{quickResult.formattedDate} • {quickResult.time}</span>
-                    </div>
-                    <div className={styles.qResRight}>
+              {searched && (
+                <div className={styles.trackResult}>
+                  {quickResult ? (
+                    <div className={styles.trackFound}>
+                      <div>
+                        <span className={styles.code}>{quickResult.id}</span>
+                        <strong>{quickResult.facility}</strong>
+                        <small>{quickResult.formattedDate} · {quickResult.time}</small>
+                      </div>
                       <span className={`${styles.statusPill} ${styles[`status_${quickResult.status}`]}`}>
-                        {quickResult.status === 'pending' ? 'Sedang Ditinjau' : quickResult.status === 'approved' ? 'Disetujui Sarpras' : 'Ditolak'}
+                        {STATUS_LABEL[quickResult.status]}
                       </span>
                     </div>
-                  </div>
-                ) : (
-                  <div className={styles.quickNotFound}>
-                    Kode &quot;<strong>{quickCode}</strong>&quot; tidak ditemukan. Pastikan format TR-XXXX-XXX tepat.
-                  </div>
-                )}
+                  ) : (
+                    <p className={styles.trackMissing}>
+                      &quot;{quickCode}&quot; tidak ditemukan. Cek lagi format kodenya (TR-XXXX-XXX).
+                    </p>
+                  )}
+                </div>
+              )}
+            </form>
+          </div>
+
+        
+          <div className={styles.heroVisual}>
+            {heroImages.map((fac, i) => (
+              <figure key={fac.id} className={`hero-photo ${styles.photo} ${styles[`photo${i}`]}`}>
+                <Image
+                  src={fac.image}
+                  alt={fac.name}
+                  fill
+                  priority={i === 0}
+                  sizes="(max-width: 960px) 50vw, 25vw"
+                  className={styles.photoImg}
+                />
+                <figcaption>{fac.name}</figcaption>
+              </figure>
+            ))}
+
+            {latestApproved && (
+              <div className={`hero-photo ${styles.ticket}`}>
+                <div className={styles.ticketHead}>
+                  <CircleCheck size={15} />
+                  <span>Baru disetujui</span>
+                </div>
+                <strong>{latestApproved.facility}</strong>
+                <span className={styles.ticketMeta}>
+                  {latestApproved.formattedDate} · {latestApproved.time}
+                </span>
+                <span className={styles.code}>{latestApproved.id}</span>
               </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* STAT METRICS SECTION */}
-      <section className={styles.statsSection}>
-        <div className={styles.statsContainer}>
-          <div className={`stat-item ${styles.statCard}`}>
-            <div className={styles.statIconBox}>
-              <Building2 size={24} color="#059669" />
-            </div>
-            <div className={styles.statText}>
-              <span className={styles.statNumber}>4 Fasilitas</span>
-              <span className={styles.statLabel}>Prasarana Unggulan Siap Pakai</span>
-            </div>
-          </div>
-
-          <div className={`stat-item ${styles.statCard}`}>
-            <div className={styles.statIconBox}>
-              <Zap size={24} color="#059669" />
-            </div>
-            <div className={styles.statText}>
-              <span className={styles.statNumber}>Deteksi Pintar</span>
-              <span className={styles.statLabel}>Anti-Bentrok Jadwal Otomatis</span>
-            </div>
-          </div>
-
-          <div className={`stat-item ${styles.statCard}`}>
-            <div className={styles.statIconBox}>
-              <FileCheck size={24} color="#059669" />
-            </div>
-            <div className={styles.statText}>
-              <span className={styles.statNumber}>100% Digital</span>
-              <span className={styles.statLabel}>Paperless & Kode Resi Unik</span>
-            </div>
-          </div>
-
-          <div className={`stat-item ${styles.statCard}`}>
-            <div className={styles.statIconBox}>
-              <Clock size={24} color="#059669" />
-            </div>
-            <div className={styles.statText}>
-              <span className={styles.statNumber}>Verifikasi Cepat</span>
-              <span className={styles.statLabel}>Tinjauan Langsung Tim Sarpras</span>
-            </div>
-          </div>
+      {/* ANGKA */}
+      <section className={`reveal ${styles.stats}`} aria-label="Ringkasan">
+        <div className={styles.statItem}>
+          <span className={styles.statNum}>{availableCount}</span>
+          <span className={styles.statLabel}>ruang siap dipinjam</span>
+        </div>
+        <div className={styles.statItem}>
+          <span className={styles.statNum}>{OFFICIAL_CLASS_ACCOUNTS.length}</span>
+          <span className={styles.statLabel}>akun kelas aktif</span>
+        </div>
+        <div className={styles.statItem}>
+          <span className={styles.statNum}>{pendingCount}</span>
+          <span className={styles.statLabel}>pengajuan menunggu</span>
+        </div>
+        <div className={styles.statItem}>
+          <span className={styles.statNum}>0</span>
+          <span className={styles.statLabel}>jadwal bentrok</span>
         </div>
       </section>
 
-      {/* FEATURED FACILITIES SPOTLIGHT */}
-      <section className={styles.showcaseSection}>
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionBadge}>KATALOG UTAMA</span>
-          <h2 className={styles.sectionTitle}>Prasarana Unggulan SMK Tri Ratna</h2>
-          <p className={styles.sectionDesc}>
-            Fasilitas representatif dengan standar sarana sekolah modern untuk mendukung mutu pembelajaran dan aktivitas siswa.
-          </p>
+      {/* FASILITAS */}
+      <section className={styles.section} id="fasilitas">
+        <div className={`reveal ${styles.sectionHead}`}>
+          <div>
+            <p className={styles.kicker}>Fasilitas</p>
+            <h2 className={styles.sectionTitle}>Ruang yang bisa kamu pinjam</h2>
+          </div>
+          <Link href="/user/booking" className={styles.headLink}>
+            Katalog lengkap <ArrowUpRight size={16} />
+          </Link>
         </div>
 
-        <div className={styles.showcaseGrid}>
+        <div className={styles.facGrid}>
           {facilities.map((fac) => (
-            <article key={fac.id} className={`facility-card-anim ${styles.facilityCard}`}>
-              <div className={styles.cardImageWrapper}>
+            <article key={fac.id} className={`reveal ${styles.facCard}`}>
+              <button
+                type="button"
+                className={styles.facImage}
+                onClick={() => setSelectedFacility(fac)}
+                aria-label={`Ajukan ${fac.name}`}
+              >
                 {fac.image ? (
                   <Image
                     src={fac.image}
                     alt={fac.name}
                     fill
-                    className={styles.cardImg}
-                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className={styles.facImg}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 25vw"
                   />
                 ) : (
-                  <div className={styles.imageFallback}>
-                    <Building2 size={40} />
-                  </div>
+                  <span className={styles.imageFallback}><Building2 size={32} /></span>
                 )}
-
-                <span className={styles.badgeAvailability}>
-                  <span className="pulse-dot" style={{
-                    width: 7, height: 7, borderRadius: '50%',
-                    background: fac.status === 'Tersedia' ? '#10B981' : '#F59E0B',
-                    display: 'inline-block', marginRight: 6
-                  }} />
+                <span className={`${styles.facStatus} ${fac.status !== 'Tersedia' ? styles.facStatusOff : ''}`}>
+                  <span className={`pulse-dot ${styles.dot}`} />
                   {fac.status}
                 </span>
+              </button>
 
-                <span className={styles.categoryTag}>{fac.category}</span>
-              </div>
-
-              <div className={styles.cardBody}>
-                <h3 className={styles.cardName}>{fac.name}</h3>
-
-                <div className={styles.cardMeta}>
-                  <span><MapPin size={15} /> {fac.loc}</span>
-                  <span><Users size={15} /> {fac.cap}</span>
+              <div className={styles.facBody}>
+                <span className={styles.facCat}>{fac.category}</span>
+                <h3 className={styles.facName}>{fac.name}</h3>
+                <div className={styles.facMeta}>
+                  <span><MapPin size={13} /> {fac.loc}</span>
+                  <span><Users size={13} /> {fac.cap}</span>
                 </div>
-
-                <p className={styles.cardDesc}>{fac.desc}</p>
-
-                {/* Amenities pills */}
-                <div className={styles.amenitiesWrap}>
-                  {fac.amenities?.slice(0, 3).map((am, i) => (
-                    <span key={i} className={styles.amenityPill}>
-                      <Check size={12} color="#059669" /> {am}
-                    </span>
-                  ))}
-                </div>
-
-                <div className={styles.cardFooter}>
-                  <button
-                    onClick={() => setSelectedFacility(fac)}
-                    className={styles.btnBookNow}
-                  >
-                    <span>Reservasi Ruangan</span>
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFacility(fac)}
+                  className={styles.facBtn}
+                >
+                  Ajukan peminjaman
+                  <ArrowRight size={15} />
+                </button>
               </div>
             </article>
           ))}
         </div>
-
-        <div className={styles.viewAllWrap}>
-          <Link href="/user/booking" className={styles.btnViewAll}>
-            Lihat Semua Detail di Katalog Lengkap
-            <ArrowRight size={16} />
-          </Link>
-        </div>
       </section>
 
-      {/* WHY SMART SYSTEM SECTION */}
-      <section className={styles.featuresSection}>
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionBadge}>KEUNGGULAN SISTEM</span>
-          <h2 className={styles.sectionTitle}>Dirancang Cerdas untuk Efisiensi Sekolah</h2>
-          <p className={styles.sectionDesc}>
-            Menghilangkan kendala birokrasi manual, pemesanan tumpang tindih, dan ketidakpastian persetujuan ruangan.
-          </p>
-        </div>
+      {/* CARA PINJAM */}
+      <section className={styles.howSection}>
+        <div className={styles.howInner}>
+          <div className={`reveal ${styles.howIntro}`}>
+            <p className={styles.kicker}>Cara pinjam</p>
+            <h2 className={styles.sectionTitle}>Empat langkah, selesai dari kelas.</h2>
+            <p className={styles.howText}>
+              Tidak perlu lagi isi formulir kertas dan menunggu tanda tangan.
+              Semua pengajuan tercatat, jadi tidak ada lagi dua kegiatan di ruang yang sama.
+            </p>
 
-        <div className={styles.featuresGrid}>
-          <div className={`feature-anim ${styles.featureCard}`}>
-            <div className={styles.featureIcon}>
-              <Zap size={24} />
-            </div>
-            <h3>Deteksi Bentrok Jadwal</h3>
-            <p>Sistem otomatis mengecek slot tanggal dan jam peminjaman untuk memastikan tidak ada dua agenda yang memakai ruangan sama.</p>
+            <ul className={styles.perks}>
+              <li><CalendarCheck2 size={17} /> Jadwal bentrok ditolak otomatis</li>
+              <li><Ticket size={17} /> Setiap pengajuan dapat kode resi</li>
+              <li><PackagePlus size={17} /> Bisa sekalian pinjam proyektor &amp; mic</li>
+              <li><ShieldCheck size={17} /> Disetujui langsung oleh tim Sarpras</li>
+            </ul>
           </div>
 
-          <div className={`feature-anim ${styles.featureCard}`}>
-            <div className={styles.featureIcon}>
-              <CheckCircle2 size={24} />
-            </div>
-            <h3>Struk Digital & Kode Resi Unik</h3>
-            <p>Setiap permohonan langsung mendapatkan ID Reservasi resmi yang dapat dilacak secara transparan oleh siswa maupun guru.</p>
-          </div>
-
-          <div className={`feature-anim ${styles.featureCard}`}>
-            <div className={styles.featureIcon}>
-              <Layers size={24} />
-            </div>
-            <h3>Pilihan Inventaris Lengkap</h3>
-            <p>Pilih kebutuhan perlengkapan tambahan seperti proyektor 4K, sound system, atau mic wireless secara terintegrasi saat mengajukan.</p>
-          </div>
-
-          <div className={`feature-anim ${styles.featureCard}`}>
-            <div className={styles.featureIcon}>
-              <ShieldCheck size={24} />
-            </div>
-            <h3>Panel Admin Sarpras Real-Time</h3>
-            <p>Staf sarana prasarana dapat meninjau, menyetujui, atau menolak permohonan dengan satu klik serta memantau agenda kalender.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* 4 STEPS WORKFLOW */}
-      <section className={styles.stepsSection}>
-        <div className={styles.stepsContainer}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionBadge}>ALUR MUDAH</span>
-            <h2 className={styles.sectionTitle}>4 Langkah Praktis Peminjaman</h2>
-          </div>
-
-          <div className={styles.stepsGrid}>
-            <div className={styles.stepCard}>
-              <span className={styles.stepNum}>01</span>
-              <h4>Pilih Fasilitas</h4>
-              <p>Pilih ruangan atau sarana yang sesuai kebutuhan kegiatan Anda dari katalog.</p>
-            </div>
-            <div className={styles.stepCard}>
-              <span className={styles.stepNum}>02</span>
-              <h4>Tentukan Jadwal</h4>
-              <p>Isi data pemohon, tanggal, serta rentang jam. Sistem akan memverifikasi ketersediaan.</p>
-            </div>
-            <div className={styles.stepCard}>
-              <span className={styles.stepNum}>03</span>
-              <h4>Verifikasi Sarpras</h4>
-              <p>Tim Admin Sarpras memeriksa agenda permohonan dan menerbitkan persetujuan resmi.</p>
-            </div>
-            <div className={styles.stepCard}>
-              <span className={styles.stepNum}>04</span>
-              <h4>Ruangan Siap Digunakan</h4>
-              <p>Gunakan fasilitas sesuai jadwal dengan tenang dan bertanggung jawab.</p>
-            </div>
-          </div>
+          <ol className={styles.steps}>
+            {[
+              ['Pilih ruang', 'Lihat katalog dan cek tanggal yang masih kosong.'],
+              ['Isi pengajuan', 'Tulis agenda kegiatan, jam mulai–selesai, dan alat tambahan.'],
+              ['Tunggu verifikasi', 'Tim Sarpras meninjau. Status bisa dilacak pakai kode resi.'],
+              ['Pakai ruangnya', 'Datang sesuai jadwal, jaga kebersihan, kembalikan alat.'],
+            ].map(([title, desc], i) => (
+              <li key={title} className={`reveal ${styles.step}`}>
+                <span className={styles.stepNum}>0{i + 1}</span>
+                <div>
+                  <h3>{title}</h3>
+                  <p>{desc}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
       {/* FOOTER */}
       <footer className={styles.footer}>
-        <div className={styles.footerContainer}>
+        <div className={styles.footerInner}>
           <div className={styles.footerBrandCol}>
             <div className={styles.footerBrand}>
-              <Building2 size={24} color="#10B981" />
-              <span>SMK Tri Ratna Jakarta</span>
+              <span className={styles.footerMark}>TR</span>
+              <span>SMK Tri Ratna</span>
             </div>
             <p className={styles.footerAbout}>
-              Sistem Manajemen Sarana & Prasarana Digital terpadu. Memberikan kemudahan akses reservasi fasilitas akademik dan ekstrakurikuler bagi seluruh civitas sekolah.
+              Sistem peminjaman sarana &amp; prasarana untuk siswa, guru, dan organisasi sekolah.
             </p>
-            <span className={styles.footerAddress}>
+            <address className={styles.footerAddress}>
               Jl. Talib I No. 35, Krukut, Taman Sari, Jakarta Barat 11140
-            </span>
+            </address>
           </div>
 
-          <div className={styles.footerLinksCol}>
-            <h4>Navigasi Portal</h4>
+          <div className={styles.footerCol}>
+            <h4>Halaman</h4>
             <ul>
-              <li><Link href="/">Beranda Utama</Link></li>
-              <li><Link href="/user/booking">Katalog & Reservasi Fasilitas</Link></li>
-              <li><Link href="/admin/dashboard">Panel Sarpras Admin</Link></li>
-              <li><Link href="/admin/agenda">Kalender Agenda Ruang</Link></li>
+              <li><Link href="/">Beranda</Link></li>
+              <li><Link href="/user/booking">Katalog fasilitas</Link></li>
+              <li><Link href="/login">Masuk</Link></li>
+              {isAdmin && <li><Link href="/admin/dashboard">Panel Sarpras</Link></li>}
             </ul>
           </div>
 
-          <div className={styles.footerLinksCol}>
-            <h4>Prasarana Utama</h4>
+          <div className={styles.footerCol}>
+            <h4>Ruang</h4>
             <ul>
-              <li><span>Cetiya Tri Ratna (Gedung A)</span></li>
-              <li><span>Lab Komputer Mac (Gedung B)</span></li>
-              <li><span>Lapangan Olahraga Serbaguna</span></li>
-              <li><span>Mini Auditorium Tri Ratna</span></li>
+              {facilities.slice(0, 4).map((f) => (
+                <li key={f.id}><span>{f.name}</span></li>
+              ))}
             </ul>
           </div>
         </div>
 
         <div className={styles.footerBottom}>
-          <p>© {new Date().getFullYear()} SMK Tri Ratna Jakarta • Divisi Sarana & Prasarana Digital. Hak Cipta Dilindungi.</p>
+          <span>© {new Date().getFullYear()} SMK Tri Ratna Jakarta</span>
+          <span>Divisi Sarana &amp; Prasarana</span>
         </div>
       </footer>
 
-      {/* BOOKING MODAL */}
       {selectedFacility && (
         <Modal
           facility={selectedFacility}

@@ -1,58 +1,136 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+/*
+ * Design tokens — SMK Tri Ratna Sarpras
+ * Palet hangat (kertas + hijau tua + kunyit), tanpa glow/gradient berlebihan.
+ * Font di-load lewat next/font di layout.jsx:
+ *   --font-display : Fraunces (judul)
+ *   --font-sans    : Geist (teks & UI)
+ *   --font-mono    : Geist Mono (kode booking, angka)
+ */
 
 :root {
-  /* Primary Emerald Brand Colors */
-  --primary: #059669;
-  --primary-hover: #047857;
-  --primary-light: #10B981;
-  --primary-dark: #064E3B;
-  --primary-bg: #ECFDF5;
-  --primary-glow: rgba(16, 185, 129, 0.25);
-
-  /* Secondary & Neutral Slate */
-  --secondary: #0F172A;
-  --secondary-light: #1E293B;
-  --surface: #F8FAFC;
-  --surface-card: rgba(255, 255, 255, 0.95);
-  --surface-card-hover: #FFFFFF;
+  /* === PALET UTAMA SEKOLAH TRI RATNA JAKARTA === */
+  --primary: #1E2A78;           /* Biru Teks Tri Ratna */
+  --primary-hover: #151E5A;     /* Biru Gelap saat di-hover */
+  --primary-light: #EEF2FF;     /* Biru Sangat Muda untuk background/chip */
   
-  /* Text Tokens */
+  --accent: #D98218;            /* Emas/Kuning Padi & Buku Tri Ratna */
+  --accent-hover: #B86B11;
+  --accent-light: #FEF3C7;      /* Emas Muda untuk highlight/badge */
+  --accent-border: #FCD34D;
+
+  --secondary: #111827;         /* Hitam Toga untuk Heading */
+
+  /* === SURFACE & BACKGROUND === */
+  --surface: #F8FAFC;           /* Background utama halaman */
+  --surface-card: #FFFFFF;      /* Background kartu */
+  --surface-2: #F1F5F9;         /* Background tombol/input sekunder */
+
+  /* === TEXT COLORS === */
   --text-main: #0F172A;
   --text-secondary: #334155;
   --text-muted: #64748B;
   --text-light: #94A3B8;
 
-  /* Border & Glassmorphism */
+  /* === BORDERS & SHADOWS === */
   --border-color: #E2E8F0;
-  --border-focus: #059669;
-  --glass-bg: rgba(255, 255, 255, 0.82);
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.07);
+  --border-strong: #CBD5E1;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 10px 25px -5px rgba(30, 42, 120, 0.08), 0 8px 10px -6px rgba(30, 42, 120, 0.04);
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Status Colors */
-  --status-pending-text: #D97706;
-  --status-pending-bg: #FFFBEB;
-  --status-pending-border: #FDE68A;
-
-  --status-approved-text: #059669;
+  /* === STATUS BADGES === */
   --status-approved-bg: #ECFDF5;
+  --status-approved-text: #047857;
   --status-approved-border: #A7F3D0;
 
-  --status-rejected-text: #E11D48;
-  --status-rejected-bg: #FFF1F2;
-  --status-rejected-border: #FECDD3;
+  /* Status Pending selaras dengan warna Emas/Amber Tri Ratna */
+  --status-pending-bg: #FFFBEB;
+  --status-pending-text: #B45309;
+  --status-pending-border: #FDE68A;
+}
 
-  /* Elevated Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
-  --shadow-glow: 0 0 20px rgba(5, 150, 105, 0.2);
+/* OPSIONAL: Jika website kamu punya fitur Dark Mode */
+[data-theme="dark"] {
+  --primary: #3B4CCA;
+  --primary-hover: #4F62E0;
+  --primary-light: rgba(59, 76, 202, 0.15);
 
-  /* Transitions */
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-smooth: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  --accent: #F59E0B;
+  --accent-light: rgba(245, 158, 11, 0.15);
+  --accent-border: rgba(245, 158, 11, 0.3);
+
+  --secondary: #F8FAFC;
+
+  --surface: #0B0F19;
+  --surface-card: #111827;
+  --surface-2: #1E293B;
+
+  --text-main: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-light: #475569;
+
+  --border-color: #1E293B;
+  --border-strong: #334155;
+
+  --status-approved-bg: rgba(16, 185, 129, 0.12);
+  --status-approved-text: #34D399;
+  --status-approved-border: rgba(16, 185, 129, 0.25);
+
+  --status-pending-bg: rgba(245, 158, 11, 0.12);
+  --status-pending-text: #FBBF24;
+  --status-pending-border: rgba(245, 158, 11, 0.25);
+}
+
+[data-theme="dark"] {
+  --primary: #3F9767;
+  --primary-hover: #4FAD79;
+  --primary-light: #74C495;
+  --primary-dark: #2C7550;
+  --primary-bg: rgba(116, 196, 149, 0.12);
+  --primary-glow: rgba(116, 196, 149, 0.25);
+
+  --accent: #E0A54E;
+  --accent-bg: rgba(224, 165, 78, 0.14);
+
+  --secondary: #EEECE5;
+  --secondary-light: #D9D6CC;
+  --surface: #121411;
+  --surface-2: #181A16;
+  --surface-card: #1A1D19;
+  --surface-card-hover: #20241F;
+
+  --text-main: #EEECE5;
+  --text-secondary: #C9C7BE;
+  --text-muted: #9A9C92;
+  --text-light: #6E7168;
+
+  --border-color: #2A2E28;
+  --border-strong: #3A3F37;
+  --border-focus: #74C495;
+  --glass-bg: rgba(18, 20, 17, 0.88);
+  --glass-border: #2A2E28;
+  --glass-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+
+  --status-pending-text: #E8B15C;
+  --status-pending-bg: rgba(232, 177, 92, 0.12);
+  --status-pending-border: rgba(232, 177, 92, 0.3);
+
+  --status-approved-text: #7DCB9C;
+  --status-approved-bg: rgba(125, 203, 156, 0.12);
+  --status-approved-border: rgba(125, 203, 156, 0.3);
+
+  --status-rejected-text: #F08A80;
+  --status-rejected-bg: rgba(240, 138, 128, 0.12);
+  --status-rejected-border: rgba(240, 138, 128, 0.3);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px -4px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 28px -10px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 24px 48px -16px rgba(0, 0, 0, 0.7);
+  --shadow-glow: 0 0 0 3px rgba(116, 196, 149, 0.2);
 }
 
 * {
@@ -63,92 +141,171 @@
 
 html {
   scroll-behavior: smooth;
+  color-scheme: light;
+  -webkit-text-size-adjust: 100%;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: #F8FAFC;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.07) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.05) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(241, 245, 249, 1) 0px, transparent 50%);
-  background-attachment: fixed;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  background-color: var(--surface);
   min-height: 100vh;
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  line-height: 1.55;
+  font-feature-settings: "ss01", "cv11";
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Custom Scrollbar */
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #F1F5F9;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: var(--border-strong);
   border-radius: 999px;
+  border: 2px solid var(--surface);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: var(--text-light);
 }
 
-/* Typography helpers */
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  color: var(--secondary);
+/* Typography */
+h1, h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
   letter-spacing: -0.02em;
-  font-weight: 700;
+  color: var(--secondary);
+  font-variation-settings: "opsz" 96, "SOFT" 30;
+}
+
+h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--secondary);
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: var(--font-sans);
+  font-size: inherit;
+  color-scheme: light;
 }
 
 button {
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
 }
 
-input, textarea, select {
-  font-family: 'Inter', sans-serif;
+a {
+  color: inherit;
 }
 
-/* Reusable Glass Effect */
+:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 2px;
+}
+
+select {
+  background-color: var(--surface-card);
+  color: var(--text-main);
+  color-scheme: light;
+}
+
+select option,
+select optgroup {
+  background-color: var(--surface-card);
+  color: var(--text-main);
+}
+
+[data-theme="dark"] button,
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  color-scheme: dark !important;
+  color: var(--text-main);
+}
+
+[data-theme="dark"] select {
+  background-color: var(--surface-card);
+  color: var(--text-main);
+  color-scheme: dark !important;
+}
+
+[data-theme="dark"] select option,
+[data-theme="dark"] select optgroup {
+  background-color: #1A1D19 !important;
+  color: #EEECE5 !important;
+}
+
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.9);
+  cursor: pointer;
+}
+
+/* Reusable surfaces */
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--surface-card);
   border: 1px solid var(--border-color);
-  box-shadow: var(--glass-shadow);
+  box-shadow: var(--shadow-md);
 }
 
-/* Pulse animation for live indicators */
+/* Live indicator */
 @keyframes pulseGlow {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.15);
-    opacity: 0.7;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
 
 .pulse-dot {
-  animation: pulseGlow 2s infinite ease-in-out;
+  animation: pulseGlow 2.2s infinite ease-in-out;
 }
 
-/* Shimmer animation */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 
+@keyframes slideUpToast {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Dulu gradient; sekarang aksen tegas dengan garis bawah tangan */
 .gradient-text {
-  background: linear-gradient(135deg, #059669 0%, #10B981 50%, #0284C7 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--primary);
+  font-style: italic;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  letter-spacing: -0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

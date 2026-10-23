@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import { 
   School, 
@@ -12,9 +12,12 @@ import {
   LogOut, 
   ArrowLeft, 
   ShieldCheck,
-  Building2
+  Building2,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useBooking } from '../lib/BookingContext';
+import { useAuth } from '../lib/AuthContext';
 import styles from './Sidebar.module.css';
 
 const MENU_ITEMS = [
@@ -25,30 +28,39 @@ const MENU_ITEMS = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const sidebarRef = useRef(null);
   const { requests } = useBooking();
+  const { currentUser, logout, theme, toggleTheme } = useAuth();
 
   const pendingCount = requests.filter(r => r.status === 'pending').length;
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.fromTo('.menu-anim',
-        { x: -20, opacity: 0 },
-        { x: 0, opacity: 1, stagger: 0.08, duration: 0.5, ease: "power2.out" }
-      );
-    }, sidebarRef);
+    // Only animate on first initial load, NEVER re-animate when clicking between tabs!
+    if (typeof window !== 'undefined' && !window.__sarpras_sidebar_animated) {
+      window.__sarpras_sidebar_animated = true;
+      const ctx = gsap.context(() => {
+        gsap.fromTo('.menu-anim',
+          { x: -16, opacity: 0 },
+          { x: 0, opacity: 1, stagger: 0.05, duration: 0.4, ease: "power2.out" }
+        );
+      }, sidebarRef);
 
-    return () => ctx.revert();
+      return () => ctx.revert();
+    }
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
 
   return (
     <aside className={styles.sidebar} ref={sidebarRef}>
       {/* Brand / Logo */}
       <div className={`menu-anim ${styles.brandSection}`}>
         <Link href="/" className={styles.brand} aria-label="Kembali ke Beranda">
-          <div className={styles.brandBadge}>
-            <School size={22} color="#ffffff" aria-hidden="true" />
-          </div>
+          <span className={styles.brandBadge} aria-hidden="true">TR</span>
           <div className={styles.brandText}>
             <span className={styles.brandTitle}>SMK Tri Ratna</span>
             <span className={styles.brandRole}>Panel Sarpras Admin</span>
@@ -59,18 +71,18 @@ export default function Sidebar() {
       {/* Admin User Profile Card */}
       <div className={`menu-anim ${styles.adminProfileCard}`}>
         <div className={styles.avatar}>
-          <ShieldCheck size={20} color="#059669" />
+          <ShieldCheck size={18} />
         </div>
         <div className={styles.adminInfo}>
-          <span className={styles.adminName}>Admin Sarpras</span>
+          <span className={styles.adminName}>{currentUser?.name || 'Admin Sarpras'}</span>
           <span className={styles.adminStatus}>
             <span className={styles.statusDot} />
-            Online Sistem
+            {currentUser?.roleLabel || 'Online Sistem'}
           </span>
         </div>
       </div>
 
-      {/* Navigasi Utama */}
+      {/* Navigasi Utama (3 Section: Dashboard, Agenda Kalender, Kelola Fasilitas) */}
       <nav className={styles.menu} aria-label="Navigasi Admin">
         <span className={styles.sectionLabel}>MENU UTAMA</span>
         {MENU_ITEMS.map((item) => {
@@ -84,7 +96,7 @@ export default function Sidebar() {
               className={`menu-anim ${styles.menuItem} ${isActive ? styles.active : ''}`}
               aria-current={isActive ? 'page' : undefined}
             >
-              <Icon size={19} className={styles.menuIcon} aria-hidden="true" />
+              <Icon size={18} className={styles.menuIcon} aria-hidden="true" />
               <span className={styles.menuText}>{item.name}</span>
               {item.id === 'dashboard' && pendingCount > 0 && (
                 <span className={styles.pendingBadge}>{pendingCount}</span>
@@ -94,16 +106,31 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer Nav & Back to User Portal */}
+      {/* Footer Nav, Theme Switcher & Logout */}
       <div className={styles.footer}>
+        <button 
+          onClick={toggleTheme} 
+          className={`menu-anim ${styles.themeToggleBtn}`}
+          title="Ganti Tema Tampilan"
+          type="button"
+        >
+          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          <span>{theme === 'dark' ? 'Mode Terang' : 'Mode Gelap'}</span>
+        </button>
+
         <Link href="/user/booking" className={`menu-anim ${styles.backUserLink}`}>
           <ArrowLeft size={16} />
           <span>Lihat Portal Siswa</span>
         </Link>
-        <Link href="/" className={`menu-anim ${styles.logoutBtn}`}>
+
+        <button 
+          onClick={handleLogout} 
+          className={`menu-anim ${styles.logoutBtn}`}
+          type="button"
+        >
           <LogOut size={18} aria-hidden="true" />
           <span>Keluar Sesi</span>
-        </Link>
+        </button>
       </div>
     </aside>
   );
