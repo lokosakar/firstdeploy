@@ -1,27 +1,55 @@
 "use client";
 
-import { useRef } from 'react';
-import { Printer, X, CheckCircle2, ShieldCheck, Calendar, Clock, MapPin, User, Phone } from 'lucide-react';
+import { Printer, X, ShieldCheck, Calendar, Clock, MapPin, CheckCircle2, Clock3, XCircle } from 'lucide-react';
 import styles from './BookingSlip.module.css';
 
 export default function BookingSlip({ booking, onClose }) {
   if (!booking) return null;
 
-
   const handlePrint = () => {
     window.print();
   };
 
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case 'approved':
+        return {
+          label: 'DISETUJUI SARPRAS',
+          sub: 'Verifikasi Resmi • Siap Digunakan',
+          className: styles.statusApproved,
+          icon: <CheckCircle2 size={16} />
+        };
+      case 'rejected':
+        return {
+          label: 'TIDAK DISETUJUI',
+          sub: booking.rejectReason || 'Ditolak oleh Admin Sarpras',
+          className: styles.statusRejected,
+          icon: <XCircle size={16} />
+        };
+      default:
+        return {
+          label: 'DALAM PENINJAUAN',
+          sub: 'Menunggu Persetujuan Sarpras',
+          className: styles.statusPending,
+          icon: <Clock3 size={16} />
+        };
+    }
+  };
+
+  const statusInfo = getStatusConfig(booking.status);
+
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        {/* Top Action Bar (Disembunyikan saat Print) */}
         <div className={styles.actionsBar}>
           <div className={styles.actionsLeft}>
-            <span className={styles.previewTag}>Pratinjau Cetak Resmi</span>
+            <span className={styles.previewDot} />
+            <span className={styles.previewTag}>Pratinjau Bukti Reservasi</span>
           </div>
           <div className={styles.actionsRight}>
             <button onClick={handlePrint} className={styles.btnPrint}>
-              <Printer size={16} />
+              <Printer size={15} />
               <span>Cetak / Simpan PDF</span>
             </button>
             <button onClick={onClose} className={styles.btnClose} aria-label="Tutup">
@@ -30,70 +58,103 @@ export default function BookingSlip({ booking, onClose }) {
           </div>
         </div>
 
+        {/* Area Kertas Resmi */}
         <div className={styles.printableArea} id="printableBookingSlip">
-          <div className={styles.slipHeader}>
+          {/* Header Instansi */}
+          <header className={styles.slipHeader}>
             <div className={styles.headerLogo}>
               <div className={styles.logoBadge}>TR</div>
               <div>
                 <h2 className={styles.schoolName}>SMK TRI RATNA JAKARTA</h2>
-                <p className={styles.schoolSub}>LAYANAN PENGELOLAAN SARANA & PRASARANA DIGITAL</p>
-                <span className={styles.schoolAddress}>Jl. Talib I No. 35, Krukut, Kec. Taman Sari, Jakarta Barat 11140 • Telp: (021) 634-1234</span>
+                <p className={styles.schoolSub}>LAYANAN SARANA & PRASARANA DIGITAL</p>
+                <span className={styles.schoolAddress}>
+                  Jl. Talib I No. 35, Taman Sari, Jakarta Barat 11140 • (021) 634-1234
+                </span>
               </div>
             </div>
-            <div className={styles.headerRight}>
-              <div className={styles.qrPlaceholder}>
-                <div className={styles.qrInner}>
-                  <ShieldCheck size={28} color="#059669" />
-                  <span className={styles.qrCodeText}>{booking.id}</span>
+
+            <div className={styles.regBadge}>
+              <div className={styles.regBadgeTop}>
+                <ShieldCheck size={15} />
+                <span>NO. REGISTRASI</span>
+              </div>
+              <strong className={styles.regCode}>{booking.id}</strong>
+            </div>
+          </header>
+
+          {/* Banner Judul & Status */}
+          <div className={styles.titleBanner}>
+            <div>
+              <h3 className={styles.docTitle}>BUKTI PEMINJAMAN RUANGAN</h3>
+              <p className={styles.docSubtitle}>Dokumen sah penggunaan fasilitas sekolah</p>
+            </div>
+            <div className={`${styles.statusBadge} ${statusInfo.className}`}>
+              {statusInfo.icon}
+              <div>
+                <strong>{statusInfo.label}</strong>
+                <small>{statusInfo.sub}</small>
+              </div>
+            </div>
+          </div>
+
+          {/* Highlight Utama: Ruangan, Tanggal, Waktu */}
+          <div className={styles.highlightBar}>
+            <div className={styles.highlightItem}>
+              <span className={styles.highlightLabel}>
+                <MapPin size={13} /> Fasilitas / Ruangan
+              </span>
+              <strong className={styles.highlightValue}>{booking.facility}</strong>
+            </div>
+            <div className={styles.highlightItem}>
+              <span className={styles.highlightLabel}>
+                <Calendar size={13} /> Tanggal Peminjaman
+              </span>
+              <strong className={styles.highlightValue}>{booking.formattedDate || booking.date}</strong>
+            </div>
+            <div className={styles.highlightItem}>
+              <span className={styles.highlightLabel}>
+                <Clock size={13} /> Waktu Pelaksanaan
+              </span>
+              <strong className={styles.highlightValue}>{booking.time} WIB</strong>
+            </div>
+          </div>
+
+          {/* Grid Detail Informasi (Menggantikan Tabel Kaku) */}
+          <div className={styles.infoGrid}>
+            <div className={styles.infoCard}>
+              <span className={styles.infoLabel}>Akun Pemohon</span>
+              <strong className={styles.infoMain}>{booking.user}</strong>
+              <span className={styles.infoSub}>{booking.email || '-'}</span>
+            </div>
+
+            <div className={styles.infoCard}>
+              <span className={styles.infoLabel}>Penanggung Jawab (PIC)</span>
+              <strong className={styles.infoMain}>{booking.picName || booking.user}</strong>
+              <span className={styles.infoSub}>
+                {booking.role} • WA: {booking.phone || '-'}
+              </span>
+            </div>
+
+            <div className={`${styles.infoCard} ${styles.fullWidth}`}>
+              <span className={styles.infoLabel}>Tujuan / Agenda Kegiatan</span>
+              <p className={styles.infoText}>{booking.purpose || '-'}</p>
+            </div>
+
+            <div className={`${styles.infoCard} ${styles.fullWidth}`}>
+              <span className={styles.infoLabel}>Peralatan Tambahan</span>
+              {booking.equipment && booking.equipment.length > 0 ? (
+                <div className={styles.tagList}>
+                  {booking.equipment.map((item, idx) => (
+                    <span key={idx} className={styles.equipTag}>{item}</span>
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <span className={styles.infoSub}>Tidak ada permintaan perlengkapan khusus</span>
+              )}
             </div>
           </div>
 
-          <div className={styles.slipDivider} />
-
-          <div className={styles.slipTitleRow}>
-            <h3 className={styles.docTitle}>SURAT BUKTI PERMOHONAN PEMINJAMAN RUANGAN</h3>
-            <span className={styles.docNumber}>No. Registrasi: {booking.id}</span>
-          </div>
-
-          <table className={styles.slipTable}>
-            <tbody>
-              <tr>
-                <td className={styles.thCol}>Akun Resmi Pemohon</td>
-                <td className={styles.tdCol}><strong>{booking.user}</strong><br /><small style={{ color: '#475569' }}>{booking.email || '-'}</small></td>
-                <td className={styles.thCol}>Siswa PIC Lapangan</td>
-                <td className={styles.tdCol}><strong>{booking.picName || booking.user}</strong><br /><small style={{ color: '#475569' }}>{booking.role}</small></td>
-              </tr>
-              <tr>
-                <td className={styles.thCol}>Fasilitas / Ruangan</td>
-                <td className={styles.tdCol}><strong>{booking.facility}</strong></td>
-                <td className={styles.thCol}>Kontak WhatsApp</td>
-                <td className={styles.tdCol}>{booking.phone || '-'}</td>
-              </tr>
-              <tr>
-                <td className={styles.thCol}>Tanggal Peminjaman</td>
-                <td className={styles.tdCol}><strong>{booking.formattedDate || booking.date}</strong></td>
-                <td className={styles.thCol}>Waktu Pelaksanaan</td>
-                <td className={styles.tdCol}><strong>{booking.time}</strong> WIB</td>
-              </tr>
-              <tr>
-                <td className={styles.thCol}>Peralatan Tambahan</td>
-                <td className={styles.tdCol} colSpan={3}>
-                  {booking.equipment && booking.equipment.length > 0 
-                    ? booking.equipment.join(', ') 
-                    : 'Tidak ada permintaan perlengkapan khusus'}
-                </td>
-              </tr>
-              <tr>
-                <td className={styles.thCol}>Tujuan / Agenda</td>
-                <td className={styles.tdCol} colSpan={3}>
-                  {booking.purpose}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
+          {/* Area Pengesahan / Tanda Tangan */}
           <div className={styles.signatureSection}>
             <div className={styles.sigBox}>
               <span>Pemohon Kegiatan,</span>
@@ -102,44 +163,19 @@ export default function BookingSlip({ booking, onClose }) {
               <small>{booking.role}</small>
             </div>
 
-            <div className={styles.sigBoxCenter}>
-              <div className={styles.statusStamp}>
-                {booking.status === 'approved' && (
-                  <div className={styles.stampApproved}>
-                    <span>VERIFIKASI RESMI</span>
-                    <strong>DISETUJUI SARPRAS</strong>
-                    <small>SMK TRI RATNA</small>
-                  </div>
-                )}
-                {booking.status === 'pending' && (
-                  <div className={styles.stampPending}>
-                    <span>STATUS PENGAJUAN</span>
-                    <strong>DALAM PENINJAUAN</strong>
-                    <small>MENUNGGU TTD SARPRAS</small>
-                  </div>
-                )}
-                {booking.status === 'rejected' && (
-                  <div className={styles.stampRejected}>
-                    <span>STATUS PENGAJUAN</span>
-                    <strong>TIDAK DISETUJUI</strong>
-                    <small>{booking.rejectReason || 'Alasan Sarpras'}</small>
-                  </div>
-                )}
-              </div>
-            </div>
-
             <div className={styles.sigBox}>
-              <span>Petugas Sarpras,</span>
+              <span>Mengetahui & Menyetujui,</span>
               <div className={styles.sigSpace} />
               <strong>Staf Administrasi Sarpras</strong>
               <small>NIP. 19850412 201001 1 008</small>
             </div>
           </div>
 
-          <div className={styles.slipFooterNotes}>
-            <p>* Harap menunjukkan surat bukti ini atau kode reservasi kepada petugas keamanan / penjaga gedung sebelum memasuki ruangan.</p>
-            <p>* Wajib menjaga ketertiban, kebersihan, serta mematikan seluruh perangkat elektronik (AC/Lampu/Proyektor) setelah selesai.</p>
-          </div>
+          {/* Catatan Kaki */}
+          <footer className={styles.slipFooterNotes}>
+            <p>• Tunjukkan bukti ini atau kode registrasi kepada petugas keamanan sebelum memasuki ruangan.</p>
+            <p>• Wajib menjaga kebersihan serta mematikan AC, lampu, dan proyektor setelah kegiatan selesai.</p>
+          </footer>
         </div>
       </div>
     </div>

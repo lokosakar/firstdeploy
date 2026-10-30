@@ -19,7 +19,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { useAuth, PRESET_ADMINS, OFFICIAL_CLASS_ACCOUNTS } from '../lib/AuthContext';
+import { useAuth, PRESET_ADMINS, OFFICIAL_CLASS_ACCOUNTS } from "../lib/AuthContext"
 import styles from './login.module.css';
 
 // Grup akun untuk dropdown "isi otomatis"

@@ -17,10 +17,14 @@ import {
   Layers,
   Mail,
   UserCheck,
-  AlertCircle
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useBooking } from '../../lib/BookingContext';
 import styles from './admin.module.css';
+
+const ITEMS_PER_PAGE = 5;
 
 const QUICK_REJECT_REASONS = [
   'Jadwal bentrok dengan kegiatan resmi / ujian sekolah',
@@ -33,13 +37,13 @@ export default function AdminDashboard() {
   const contentRef = useRef(null);
   const { requests, updateBookingStatus } = useBooking();
 
-  const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'pending' | 'approved' | 'rejected'
+  const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedDetail, setSelectedDetail] = useState(null);
   const [rejectingItem, setRejectingItem] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
 
-  // Calculate dynamic KPIs
   const totalCount = requests.length;
   const pendingCount = requests.filter(r => r.status === 'pending').length;
   const approvedCount = requests.filter(r => r.status === 'approved').length;
@@ -80,23 +84,6 @@ export default function AdminDashboard() {
     }
   ];
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.fromTo('.stagger-item',
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, stagger: 0.07, duration: 0.55, ease: "power3.out" }
-      );
-
-      gsap.fromTo('.row-anim',
-        { opacity: 0, y: 8 },
-        { opacity: 1, y: 0, stagger: 0.04, duration: 0.35, ease: "power2.out", delay: 0.15 }
-      );
-    }, contentRef);
-
-    return () => ctx.revert();
-  }, [filterStatus, searchTerm]);
-
-  // Filter requests
   const filteredRequests = requests.filter(req => {
     const matchesFilter = filterStatus === 'all' || req.status === filterStatus;
     const query = searchTerm.toLowerCase().trim();
@@ -108,6 +95,35 @@ export default function AdminDashboard() {
       (req.picName && req.picName.toLowerCase().includes(query));
     return matchesFilter && matchesSearch;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / ITEMS_PER_PAGE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedRequests = filteredRequests.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, searchTerm]);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo('.stagger-item',
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, stagger: 0.07, duration: 0.5, ease: "power3.out" }
+      );
+    }, contentRef);
+    return () => ctx.revert();
+  }, []);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo('.row-anim',
+        { opacity: 0, y: 8 },
+        { opacity: 1, y: 0, stagger: 0.04, duration: 0.3, ease: "power2.out" }
+      );
+    }, contentRef);
+    return () => ctx.revert();
+  }, [safeCurrentPage, filterStatus, searchTerm]);
 
   const getInitials = (name = '') => {
     return name
@@ -137,7 +153,6 @@ export default function AdminDashboard() {
 
   return (
     <main className={styles.mainContent} ref={contentRef}>
-      {/* HEADER SECTION */}
       <header className={`stagger-item ${styles.header}`}>
         <div className={styles.headerLeft}>
           <div className={styles.badgeWrapper}>
@@ -157,14 +172,13 @@ export default function AdminDashboard() {
             <span className={pendingCount > 0 ? styles.statusDotWarn : styles.statusDotOk} />
             <span>
               {pendingCount > 0 
-                ? `${pendingCount} Permohonan MenungguTindakan` 
+                ? `${pendingCount} Permohonan Menunggu Tindakan` 
                 : 'Semua Permohonan Terverifikasi'}
             </span>
           </div>
         </div>
       </header>
 
-      {/* KPI CARDS GRID */}
       <section className={styles.statsGrid} aria-label="Ringkasan Statistik">
         {KPI_STATS.map((stat) => {
           const IconComponent = stat.icon;
@@ -198,7 +212,6 @@ export default function AdminDashboard() {
         })}
       </section>
 
-      {/* CONTROLS & FILTER BAR */}
       <section className={`stagger-item ${styles.controlsBar}`}>
         <div className={styles.filterTabs}>
           <button 
@@ -244,7 +257,6 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      {/* DATA TABLE SECTION */}
       <section className={`stagger-item ${styles.tableContainer}`} aria-label="Tabel Permohonan">
         {filteredRequests.length === 0 ? (
           <div className={styles.emptyTable}>
@@ -263,137 +275,181 @@ export default function AdminDashboard() {
             )}
           </div>
         ) : (
-          <div className={styles.tableResponsive}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Kode & Pemohon</th>
-                  <th>Fasilitas Ruangan</th>
-                  <th>Jadwal Pelaksanaan</th>
-                  <th>Agenda Kegiatan</th>
-                  <th>Status</th>
-                  <th>Aksi Sarpras</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRequests.map((req) => (
-                  <tr key={req.id} className="row-anim">
-                    <td>
-                      <div className={styles.requesterCell}>
-                        <div className={styles.avatarCircle}>
-                          {getInitials(req.user)}
+          <>
+            <div className={styles.tableResponsive}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th className={styles.colRequester}>Kode & Pemohon</th>
+                    <th className={styles.colFacility}>Fasilitas Ruangan</th>
+                    <th className={styles.colSchedule}>Jadwal Pelaksanaan</th>
+                    <th className={styles.colPurpose}>Agenda Kegiatan</th>
+                    <th className={styles.colStatus}>Status</th>
+                    <th className={styles.colAction}>Aksi Sarpras</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedRequests.map((req) => (
+                    <tr key={req.id} className="row-anim">
+                      <td>
+                        <div className={styles.requesterCell}>
+                          <div className={styles.avatarCircle}>
+                            {getInitials(req.user)}
+                          </div>
+                          <div className={styles.userData}>
+                            <div className={styles.userTopMeta}>
+                              <span className={styles.requestId}>{req.id}</span>
+                              <span className={styles.userRolePill}>{req.role}</span>
+                            </div>
+                            <span className={styles.userName}>{req.user}</span>
+                            {req.picName && (
+                              <span className={styles.picBadge}>
+                                <UserCheck size={11} /> PIC: {req.picName}
+                              </span>
+                            )}
+                            {req.email && req.email !== '-' && (
+                              <span className={styles.userEmail}>{req.email}</span>
+                            )}
+                          </div>
                         </div>
-                        <div className={styles.userData}>
-                          <span className={styles.requestId}>{req.id}</span>
-                          <span className={styles.userName}>{req.user}</span>
-                          {req.picName && (
-                            <span className={styles.picBadge}>
-                              <UserCheck size={11} /> PIC: {req.picName}
+                      </td>
+
+                      <td>
+                        <div className={styles.facilityCell}>
+                          <div className={styles.facilityIconBox}>
+                            <Building2 size={16} />
+                          </div>
+                          <span className={styles.facilityName}>{req.facility}</span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className={styles.scheduleCell}>
+                          <span className={styles.scheduleDate}>
+                            <Calendar size={13} className={styles.scheduleIcon} /> {req.formattedDate || req.date}
+                          </span>
+                          <span className={styles.scheduleTime}>
+                            <Clock size={12} /> {req.time}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className={styles.purposeWrapper}>
+                          <p className={styles.purposeText} title={req.purpose}>{req.purpose}</p>
+                          {req.equipment?.length > 0 && (
+                            <span className={styles.equipmentTagBadge}>
+                              +{req.equipment.length} Perlengkapan Tambahan
                             </span>
                           )}
-                          {req.email && req.email !== '-' && (
-                            <span className={styles.userEmail}>
-                              {req.email}
-                            </span>
-                          )}
-                          <span className={styles.userSub}>{req.role}</span>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td>
-                      <div className={styles.facilityCell}>
-                        <div className={styles.facilityIconBox}>
-                          <Building2 size={16} />
-                        </div>
-                        <span className={styles.fw600}>{req.facility}</span>
-                      </div>
-                    </td>
-
-                    <td>
-                      <div className={styles.scheduleCell}>
-                        <span className={styles.scheduleDate}>
-                          <Calendar size={13} /> {req.formattedDate || req.date}
-                        </span>
-                        <span className={styles.scheduleTime}>
-                          <Clock size={12} /> {req.time}
-                        </span>
-                      </div>
-                    </td>
-
-                    <td>
-                      <p className={styles.purposeText}>{req.purpose}</p>
-                      {req.equipment?.length > 0 && (
-                        <span className={styles.equipmentTagBadge}>
-                          +{req.equipment.length} Perlengkapan Tambahan
-                        </span>
-                      )}
-                    </td>
-
-                    <td>
-                      {req.status === 'pending' && (
-                        <span className={`${styles.badge} ${styles.pending}`}>
-                          <Clock size={13} /> Menunggu
-                        </span>
-                      )}
-                      {req.status === 'approved' && (
-                        <span className={`${styles.badge} ${styles.approved}`}>
-                          <CheckCircle size={13} /> Disetujui
-                        </span>
-                      )}
-                      {req.status === 'rejected' && (
-                        <span className={`${styles.badge} ${styles.rejected}`}>
-                          <XCircle size={13} /> Ditolak
-                        </span>
-                      )}
-                    </td>
-
-                    <td>
-                      <div className={styles.actionGroup}>
-                        <button 
-                          className={`${styles.btnAction} ${styles.btnDetail}`}
-                          onClick={() => setSelectedDetail(req)}
-                          title="Lihat Detail Lengkap"
-                          aria-label={`Detail permohonan ${req.id}`}
-                        >
-                          <Eye size={15} />
-                        </button>
-
-                        {req.status === 'pending' ? (
-                          <>
-                            <button 
-                              className={`${styles.btnAction} ${styles.btnApprove}`} 
-                              onClick={() => handleApprove(req.id)}
-                              aria-label={`Setujui permohonan ${req.id}`} 
-                              title="Setujui Reservasi"
-                            >
-                              <Check size={16} />
-                            </button>
-                            <button 
-                              className={`${styles.btnAction} ${styles.btnReject}`} 
-                              onClick={() => handleOpenRejectModal(req)}
-                              aria-label={`Tolak permohonan ${req.id}`} 
-                              title="Tolak Reservasi"
-                            >
-                              <X size={16} />
-                            </button>
-                          </>
-                        ) : (
-                          <span className={styles.actionDone}>
-                            {req.status === 'approved' ? 'Terverifikasi' : 'Dibatalkan'}
+                      <td>
+                        {req.status === 'pending' && (
+                          <span className={`${styles.badge} ${styles.pending}`}>
+                            <Clock size={13} /> Menunggu
                           </span>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                        {req.status === 'approved' && (
+                          <span className={`${styles.badge} ${styles.approved}`}>
+                            <CheckCircle size={13} /> Disetujui
+                          </span>
+                        )}
+                        {req.status === 'rejected' && (
+                          <span className={`${styles.badge} ${styles.rejected}`}>
+                            <XCircle size={13} /> Ditolak
+                          </span>
+                        )}
+                      </td>
+
+                      <td>
+                        <div className={styles.actionGroup}>
+                          <button 
+                            className={`${styles.btnAction} ${styles.btnDetail}`}
+                            onClick={() => setSelectedDetail(req)}
+                            title="Lihat Detail Lengkap"
+                            aria-label={`Detail permohonan ${req.id}`}
+                          >
+                            <Eye size={15} />
+                          </button>
+
+                          {req.status === 'pending' ? (
+                            <>
+                              <button 
+                                className={`${styles.btnAction} ${styles.btnApprove}`} 
+                                onClick={() => handleApprove(req.id)}
+                                aria-label={`Setujui permohonan ${req.id}`} 
+                                title="Setujui Reservasi"
+                              >
+                                <Check size={16} />
+                              </button>
+                              <button 
+                                className={`${styles.btnAction} ${styles.btnReject}`} 
+                                onClick={() => handleOpenRejectModal(req)}
+                                aria-label={`Tolak permohonan ${req.id}`} 
+                                title="Tolak Reservasi"
+                              >
+                                <X size={16} />
+                              </button>
+                            </>
+                          ) : (
+                            <span className={styles.actionDone}>
+                              {req.status === 'approved' ? 'Terverifikasi' : 'Dibatalkan'}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className={styles.paginationFooter}>
+              <div className={styles.paginationInfo}>
+                Menampilkan <strong>{startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, filteredRequests.length)}</strong> dari <strong>{filteredRequests.length}</strong> data permohonan
+              </div>
+
+              <div className={styles.paginationControls}>
+                <button
+                  type="button"
+                  className={styles.pageArrowBtn}
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={safeCurrentPage === 1}
+                  aria-label="Halaman Sebelumnya"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                <div className={styles.pageNumberList}>
+                  {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((page) => (
+                    <button
+                      type="button"
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`${styles.pageNumberBtn} ${safeCurrentPage === page ? styles.pageNumberBtnActive : ''}`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  className={styles.pageArrowBtn}
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={safeCurrentPage === totalPages}
+                  aria-label="Halaman Berikutnya"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </section>
 
-      {/* DETAIL MODAL */}
       {selectedDetail && (
         <div className={styles.modalOverlay} onClick={() => setSelectedDetail(null)}>
           <div className={styles.detailCard} onClick={e => e.stopPropagation()}>
@@ -528,7 +584,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* REJECTION REASON MODAL */}
       {rejectingItem && (
         <div className={styles.modalOverlay} onClick={() => setRejectingItem(null)}>
           <div className={styles.rejectCard} onClick={e => e.stopPropagation()}>

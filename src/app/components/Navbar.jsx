@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import gsap from 'gsap';
 import { 
-  School, 
   Search, 
   Bell, 
   Menu, 
@@ -15,12 +15,10 @@ import {
   XCircle, 
   ArrowRight,
   ShieldCheck,
-  CalendarCheck,
   Sun,
   Moon,
   LogIn,
   LogOut,
-  User,
   GraduationCap
 } from 'lucide-react';
 import { useBooking } from '../lib/BookingContext';
@@ -29,10 +27,12 @@ import styles from './Navbar.module.css';
 
 export default function Navbar() {
   const navRef = useRef(null);
+  const notifRef = useRef(null);
   const pathname = usePathname();
   const { requests, searchBooking } = useBooking();
-  const { currentUser, isAdmin, isSiswa, isAuthenticated, logout, theme, toggleTheme } = useAuth();
+  const { currentUser, isAdmin, isAuthenticated, logout, theme, toggleTheme } = useAuth();
   
+  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [trackModalOpen, setTrackModalOpen] = useState(false);
@@ -40,18 +40,16 @@ export default function Navbar() {
   const [searchResult, setSearchResult] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Dynamic navigation links based on user role:
-  // Role 'siswa' or Guest will NOT see 'Panel Sarpras'
   const navLinks = [
     { name: "Beranda", path: "/" },
     { name: "Katalog Fasilitas", path: "/user/booking" },
     ...(isAdmin ? [{ name: "Panel Sarpras", path: "/admin/dashboard" }] : [])
   ];
 
-  // Recent notifications from requests
   const recentNotifs = requests.slice(0, 4);
   const pendingCount = requests.filter(r => r.status === 'pending').length;
 
+  // Animasi masuk GSAP
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.fromTo(navRef.current,
@@ -61,6 +59,27 @@ export default function Navbar() {
     });
 
     return () => ctx.revert();
+  }, []);
+
+  // Deteksi scroll agar navbar tidak menyatu dengan konten di bawahnya
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 12);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Tutup dropdown notifikasi ketika klik di luar area
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleTrackSubmit = (e) => {
@@ -73,11 +92,23 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={styles.navbar} ref={navRef}>
+      <nav 
+        ref={navRef}
+        className={`${styles.navbar} ${isScrolled ? styles.navbarScrolled : ''} ${theme === 'dark' ? styles.darkTheme : ''}`}
+      >
         <div className={styles.navContainer}>
-          {/* Brand / Logo */}
+          {/* Brand / Logo Resmi SMK Tri Ratna */}
           <Link href="/" className={styles.brand} aria-label="Beranda SMK Tri Ratna">
-            <span className={styles.logoBadge} aria-hidden="true">TR</span>
+            <div className={styles.logoFrame}>
+              <Image 
+                src="/logo-triratna.png" 
+                alt="Logo Sekolah Tri Ratna Jakarta" 
+                width={38} 
+                height={38} 
+                className={styles.logoImg}
+                priority
+              />
+            </div>
             <div className={styles.brandTextWrapper}>
               <span className={styles.brandName}>SMK Tri Ratna</span>
               <span className={styles.brandSub}>Peminjaman Sarpras</span>
@@ -117,18 +148,20 @@ export default function Navbar() {
                 setSearchCode('');
               }}
               title="Lacak Status Peminjaman"
+              type="button"
             >
-              <Search size={14} />
+              <Search size={14} className={styles.trackIcon} />
               <span>Lacak</span>
             </button>
 
             {/* Notification Bell with Dropdown */}
-            <div className={styles.notifWrapper}>
+            <div className={styles.notifWrapper} ref={notifRef}>
               <button 
-                className={styles.iconBtn}
+                className={`${styles.iconBtn} ${notifOpen ? styles.iconBtnActive : ''}`}
                 onClick={() => setNotifOpen(!notifOpen)}
                 aria-label="Notifikasi Permohonan"
                 title="Aktivitas Terbaru"
+                type="button"
               >
                 <Bell size={17} />
                 {pendingCount > 0 && (
@@ -203,7 +236,9 @@ export default function Navbar() {
                   </div>
                   <div className={styles.userInfoCol}>
                     <span className={styles.userFullName}>{currentUser.name}</span>
-                    <span className={styles.userRoleTag}>{isAdmin ? 'Admin Sarpras' : (currentUser.classGrade || 'Siswa')}</span>
+                    <span className={styles.userRoleTag}>
+                      {isAdmin ? 'Admin Sarpras' : (currentUser.classGrade || 'Siswa')}
+                    </span>
                   </div>
                 </div>
 
@@ -229,8 +264,9 @@ export default function Navbar() {
             className={styles.mobileMenuBtn}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle Navigation Menu"
+            type="button"
           >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
 
@@ -260,6 +296,7 @@ export default function Navbar() {
                 setMobileMenuOpen(false);
                 setTrackModalOpen(true);
               }}
+              type="button"
             >
               <Search size={16} />
               <span>Lacak Status Reservasi</span>
@@ -268,6 +305,7 @@ export default function Navbar() {
             <button 
               className={styles.mobileThemeBtn}
               onClick={toggleTheme}
+              type="button"
             >
               {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
               <span>{theme === 'dark' ? 'Mode Terang' : 'Mode Gelap'}</span>
@@ -285,6 +323,7 @@ export default function Navbar() {
                     setMobileMenuOpen(false);
                   }}
                   className={styles.mobileLogoutBtn}
+                  type="button"
                 >
                   <LogOut size={16} />
                   <span>Keluar Sesi</span>
@@ -304,6 +343,9 @@ export default function Navbar() {
         )}
       </nav>
 
+      {/* Spacer otomatis agar konten halaman tidak tertutup navbar fixed */}
+      <div className={styles.navbarSpacer} aria-hidden="true" />
+
       {/* TRACK BOOKING MODAL */}
       {trackModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setTrackModalOpen(false)}>
@@ -317,6 +359,7 @@ export default function Navbar() {
                 className={styles.closeBtn} 
                 onClick={() => setTrackModalOpen(false)}
                 aria-label="Tutup modal"
+                type="button"
               >
                 <X size={20} />
               </button>
@@ -349,7 +392,11 @@ export default function Navbar() {
                         {searchResult.status === 'pending' && <Clock size={14} />}
                         {searchResult.status === 'approved' && <CheckCircle size={14} />}
                         {searchResult.status === 'rejected' && <XCircle size={14} />}
-                        {searchResult.status === 'pending' ? 'Menunggu Review Sarpras' : searchResult.status === 'approved' ? 'Disetujui - Ruang Terpesan' : 'Ditolak'}
+                        {searchResult.status === 'pending' 
+                          ? 'Menunggu Review Sarpras' 
+                          : searchResult.status === 'approved' 
+                          ? 'Disetujui - Ruang Terpesan' 
+                          : 'Ditolak'}
                       </span>
                     </div>
 
@@ -364,7 +411,9 @@ export default function Navbar() {
                       </div>
                       <div className={styles.detailRow}>
                         <span className={styles.detailLabel}>Jadwal</span>
-                        <span className={styles.detailVal}>{searchResult.formattedDate} • {searchResult.time}</span>
+                        <span className={styles.detailVal}>
+                          {searchResult.formattedDate} • {searchResult.time}
+                        </span>
                       </div>
                       <div className={styles.detailRow}>
                         <span className={styles.detailLabel}>Agenda</span>

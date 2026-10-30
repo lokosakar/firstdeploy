@@ -3,7 +3,7 @@ import './globals.css';
 import { AuthProvider } from './lib/AuthContext';
 import { BookingProvider } from './lib/BookingContext';
 
-// Font judul: serif berkarakter (bukan font "default AI")
+// Font judul: serif editorial berkarakter
 const fraunces = Fraunces({
   subsets: ['latin'],
   variable: '--font-display',
@@ -44,7 +44,7 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body>
+      <body className="antialiased selection:bg-amber-500/20">
         <AuthProvider>
           <BookingProvider>{children}</BookingProvider>
         </AuthProvider>
